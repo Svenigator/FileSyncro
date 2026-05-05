@@ -15,6 +15,7 @@
 - [ ] macOS-Build — standalone FileSyncro.app ohne Installationserfordernis
 
 - [ ] Web-Interface — optionale Browser-Oberfläche (aiohttp + HTML) auf Port 5757, damit iPads und andere Geräte ohne App den Sync-Status einsehen, Dateien hochladen und einen Sync anstoßen können
+- [ ] GitHub Release — automatisches Release bei neuem Tag, damit Builds dauerhaft als Download verfügbar sind (nicht nur 90 Tage als Artefakt)
 
 ## In Progress
 
