@@ -14,6 +14,8 @@
 - [ ] Windows-Build — standalone FileSyncro.exe ohne Installationserfordernis
 - [ ] macOS-Build — standalone FileSyncro.app ohne Installationserfordernis
 
+- [ ] Web-Interface — optionale Browser-Oberfläche (aiohttp + HTML) auf Port 5757, damit iPads und andere Geräte ohne App den Sync-Status einsehen, Dateien hochladen und einen Sync anstoßen können
+
 ## In Progress
 
 ## Done
