@@ -13,26 +13,29 @@ class _DebounceHandler(FileSystemEventHandler):
         self._debounce = debounce
         self._handles: dict[str, asyncio.TimerHandle] = {}
 
-    def _schedule(self, key: str, coro):
+    def _schedule(self, key: str, fn):
         if key in self._handles:
             self._handles[key].cancel()
         handle = self._loop.call_later(
             self._debounce,
-            lambda: asyncio.run_coroutine_threadsafe(coro, self._loop)
+            lambda: asyncio.run_coroutine_threadsafe(fn(), self._loop)
         )
         self._handles[key] = handle
 
     def on_created(self, event):
         if not event.is_directory:
-            self._schedule(event.src_path, self._on_change(Path(event.src_path)))
+            path = Path(event.src_path)
+            self._schedule(event.src_path, lambda p=path: self._on_change(p))
 
     def on_modified(self, event):
         if not event.is_directory:
-            self._schedule(event.src_path, self._on_change(Path(event.src_path)))
+            path = Path(event.src_path)
+            self._schedule(event.src_path, lambda p=path: self._on_change(p))
 
     def on_deleted(self, event):
         if not event.is_directory:
-            self._schedule(event.src_path, self._on_delete(Path(event.src_path)))
+            path = Path(event.src_path)
+            self._schedule(event.src_path, lambda p=path: self._on_delete(p))
 
 
 class FileWatcher:
