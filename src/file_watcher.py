@@ -18,7 +18,7 @@ class _DebounceHandler(FileSystemEventHandler):
             self._handles[key].cancel()
         handle = self._loop.call_later(
             self._debounce,
-            lambda: asyncio.run_coroutine_threadsafe(fn(), self._loop)
+            lambda: self._loop.create_task(fn())
         )
         self._handles[key] = handle
 

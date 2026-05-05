@@ -61,17 +61,16 @@ def main():
             rel = str(path.relative_to(sync_dir[0])).replace('\\', '/')
         except ValueError:
             return
-        done = threading.Event()
-        result_holder: list[str] = []
+        loop = asyncio.get_running_loop()
+        future: asyncio.Future = loop.create_future()
 
         def callback(result: str):
-            result_holder.append(result)
-            done.set()
+            loop.call_soon_threadsafe(future.set_result, result)
 
         delete_queue.put({"rel_path": rel, "callback": callback})
-        done.wait(timeout=30)
+        result = await future
 
-        if result_holder and result_holder[0] == "all":
+        if result == "all":
             await peer_manager.delete_file(rel)
             activity_queue.put(f"🗑 {path.name} auf allen Geräten gelöscht")
 
