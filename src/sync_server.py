@@ -19,6 +19,9 @@ class SyncServer:
 
     async def _handle_put(self, request: web.Request) -> web.Response:
         rel_path = request.match_info['path']
+        if '..' in rel_path or rel_path.startswith('/') or rel_path.startswith('\\'):
+            return web.Response(status=400, text='invalid path')
+
         remote_ts = float(request.headers.get('X-Timestamp', '0'))
         data = await request.read()
         file_path = self.sync_dir / rel_path
@@ -28,7 +31,7 @@ class SyncServer:
             if abs(local_ts - remote_ts) < 1.0:
                 return web.Response(status=200, text='unchanged')
             if self.on_conflict:
-                loop = asyncio.get_event_loop()
+                loop = asyncio.get_running_loop()
                 future: asyncio.Future = loop.create_future()
                 self.on_conflict(rel_path, local_ts, remote_ts, data, future)
                 accept = await future
@@ -42,6 +45,9 @@ class SyncServer:
 
     async def _handle_delete(self, request: web.Request) -> web.Response:
         rel_path = request.match_info['path']
+        if '..' in rel_path or rel_path.startswith('/') or rel_path.startswith('\\'):
+            return web.Response(status=400, text='invalid path')
+
         file_path = self.sync_dir / rel_path
         if file_path.exists():
             file_path.unlink()
