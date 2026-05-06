@@ -57,6 +57,11 @@ class App(ctk.CTk):
         self._on_group_changed = on_group_changed
 
         self._build_ui()
+        # Restore persisted active group on startup
+        active = self._group_manager.active_group_name
+        if active and any(g.name == active for g in self._group_manager.groups):
+            self._group_var.set(active)
+            self._on_group_selected(active)
         self._poll_queues()
 
     def _build_ui(self):
@@ -155,8 +160,10 @@ class App(ctk.CTk):
 
     def _on_group_selected(self, value: str) -> None:
         if value == "Alle Geräte":
+            self._group_manager.set_active(None)
             self._on_group_changed(None)
         else:
+            self._group_manager.set_active(value)
             group = next((g for g in self._group_manager.groups if g.name == value), None)
             self._on_group_changed(group.peer_names if group else None)
 
