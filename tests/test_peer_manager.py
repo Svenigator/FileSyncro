@@ -131,3 +131,31 @@ async def test_ping_fires_callback_on_status_change(tmp_path):
     assert result is False
     assert len(callbacks) == 1
     assert callbacks[0] is False  # callback received peer with reachable=False
+
+
+async def test_send_file_respects_active_filter(tmp_path):
+    f = tmp_path / "slide.pptx"
+    f.write_bytes(b"data")
+
+    pm = PeerManager(sync_dir=tmp_path)
+    pm.add_peer(Peer(name="in-group", ip="192.168.1.1", port=5757))
+    pm.add_peer(Peer(name="out-group", ip="192.168.1.2", port=5757))
+    pm.set_active_filter(["in-group"])
+
+    called_urls: list[str] = []
+
+    mock_resp = AsyncMock()
+    mock_resp.status = 200
+    mock_cm = MagicMock()
+    mock_cm.__aenter__ = AsyncMock(return_value=mock_resp)
+    mock_cm.__aexit__ = AsyncMock(return_value=False)
+
+    def mock_put(self_session, url, **kwargs):
+        called_urls.append(url)
+        return mock_cm
+
+    with patch("aiohttp.ClientSession.put", mock_put):
+        await pm.send_file("slide.pptx")
+
+    assert any("192.168.1.1" in u for u in called_urls)
+    assert not any("192.168.1.2" in u for u in called_urls)

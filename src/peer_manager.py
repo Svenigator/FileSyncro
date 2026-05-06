@@ -19,6 +19,7 @@ class PeerManager:
         self.sync_dir = sync_dir
         self.on_peer_status_changed = on_peer_status_changed
         self._peers: dict[str, Peer] = {}
+        self._active_filter: list[str] | None = None
 
     @property
     def peers(self) -> list[Peer]:
@@ -29,6 +30,15 @@ class PeerManager:
 
     def remove_peer(self, name: str) -> None:
         self._peers.pop(name, None)
+
+    def set_active_filter(self, names: list[str] | None) -> None:
+        self._active_filter = names
+
+    @property
+    def active_peers(self) -> list[Peer]:
+        if self._active_filter is None:
+            return self.peers
+        return [p for p in self.peers if p.name in self._active_filter]
 
     def _url(self, peer: Peer, path: str) -> str:
         return f"http://{peer.ip}:{peer.port}{path}"
@@ -46,7 +56,7 @@ class PeerManager:
         ts = file_path.stat().st_mtime
         results: dict[str, bool] = {}
         async with aiohttp.ClientSession() as session:
-            for peer in self.peers:
+            for peer in self.active_peers:
                 try:
                     async with session.put(
                         self._url(peer, f"/file/{rel_path}"),
@@ -64,7 +74,7 @@ class PeerManager:
     async def delete_file(self, rel_path: str) -> dict[str, bool]:
         results: dict[str, bool] = {}
         async with aiohttp.ClientSession() as session:
-            for peer in self.peers:
+            for peer in self.active_peers:
                 try:
                     async with session.delete(
                         self._url(peer, f"/file/{rel_path}"),
@@ -127,7 +137,7 @@ class PeerManager:
                 rel = str(f.relative_to(self.sync_dir)).replace('\\', '/')
                 local_files[rel] = f.stat().st_mtime
 
-        for peer in self.peers:
+        for peer in self.active_peers:
             remote_files = await self.get_peer_files(peer)
             for rel_path, local_ts in local_files.items():
                 remote_ts = remote_files.get(rel_path)
