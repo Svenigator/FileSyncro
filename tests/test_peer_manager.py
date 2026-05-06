@@ -153,3 +153,15 @@ async def test_send_file_respects_active_filter(tmp_path):
 
     assert "in-group" in results
     assert "out-group" not in results
+
+
+def test_active_filter_none_restores_all_peers(tmp_path):
+    pm = PeerManager(sync_dir=tmp_path)
+    pm.add_peer(Peer(name="peer-a", ip="192.168.1.1", port=5757))
+    pm.add_peer(Peer(name="peer-b", ip="192.168.1.2", port=5757))
+
+    pm.set_active_filter(["peer-a"])
+    assert len(pm.active_peers) == 1
+
+    pm.set_active_filter(None)
+    assert len(pm.active_peers) == 2
