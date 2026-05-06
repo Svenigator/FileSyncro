@@ -91,6 +91,35 @@ class PeerManager:
                 self._mark_unreachable(peer)
         return {}
 
+    async def ping(self, peer: Peer) -> bool:
+        async with aiohttp.ClientSession() as session:
+            try:
+                async with session.get(
+                    self._url(peer, "/files"),
+                    timeout=aiohttp.ClientTimeout(total=3),
+                ) as resp:
+                    reachable = resp.status == 200
+                    if peer.reachable != reachable:
+                        peer.reachable = reachable
+                        if self.on_peer_status_changed:
+                            self.on_peer_status_changed(peer)
+                    else:
+                        peer.reachable = reachable
+                    return reachable
+            except Exception:
+                if peer.reachable:
+                    self._mark_unreachable(peer)
+                return False
+
+    async def ping_all(self) -> list[str]:
+        removed: list[str] = []
+        for name, peer in list(self._peers.items()):
+            reachable = await self.ping(peer)
+            if not reachable:
+                self.remove_peer(name)
+                removed.append(name)
+        return removed
+
     async def sync_with_all(self) -> None:
         if not self.sync_dir.exists():
             return
