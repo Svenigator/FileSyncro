@@ -103,8 +103,6 @@ class PeerManager:
                         peer.reachable = reachable
                         if self.on_peer_status_changed:
                             self.on_peer_status_changed(peer)
-                    else:
-                        peer.reachable = reachable
                     return reachable
             except Exception:
                 if peer.reachable:

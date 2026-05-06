@@ -117,3 +117,17 @@ async def test_ping_all_removes_unreachable_and_returns_names(tmp_path):
     assert removed == ["dead"]
     assert "dead" not in [p.name for p in pm.peers]
     assert "alive" in [p.name for p in pm.peers]
+
+
+async def test_ping_fires_callback_on_status_change(tmp_path):
+    callbacks = []
+    pm = PeerManager(sync_dir=tmp_path, on_peer_status_changed=lambda p: callbacks.append(p.reachable))
+    peer = Peer(name="mac", ip="192.168.1.5", port=5757, reachable=True)
+    pm.add_peer(peer)
+
+    with patch("aiohttp.ClientSession.get", side_effect=Exception("timeout")):
+        result = await pm.ping(peer)
+
+    assert result is False
+    assert len(callbacks) == 1
+    assert callbacks[0] is False  # callback received peer with reachable=False
