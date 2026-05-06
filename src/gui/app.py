@@ -116,6 +116,9 @@ class App(ctk.CTk):
     def log(self, message: str) -> None:
         self._log.configure(state="normal")
         self._log.insert("end", message + "\n")
+        line_count = int(self._log.index("end-1c").split(".")[0])
+        if line_count > 500:
+            self._log.delete("1.0", f"{line_count - 500}.0")
         self._log.see("end")
         self._log.configure(state="disabled")
 
