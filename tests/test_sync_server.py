@@ -165,3 +165,24 @@ async def test_put_returns_403_on_permission_error(tmp_path):
                 assert "permission" in (await resp.text()).lower()
     finally:
         await srv.stop()
+
+
+async def test_info_returns_group_and_groups(tmp_path):
+    from src.group_manager import GroupManager
+    gm = GroupManager(config_path=tmp_path / "groups.json")
+    gm.create_group("Bühne")
+    gm.create_group("Technik")
+    gm.set_my_group("Bühne")
+
+    srv = SyncServer(sync_dir=tmp_path, group_manager=gm)
+    await srv.start()
+    try:
+        async with aiohttp.ClientSession() as s:
+            resp = await s.get(f"http://localhost:{SyncServer.PORT}/info")
+            assert resp.status == 200
+            data = await resp.json()
+            assert data["group"] == "Bühne"
+            assert "Bühne" in data["groups"]
+            assert "Technik" in data["groups"]
+    finally:
+        await srv.stop()

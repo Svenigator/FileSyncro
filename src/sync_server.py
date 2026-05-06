@@ -8,14 +8,16 @@ from aiohttp import web
 class SyncServer:
     PORT = 5757
 
-    def __init__(self, sync_dir: Path, on_conflict=None, on_before_delete=None):
+    def __init__(self, sync_dir: Path, on_conflict=None, on_before_delete=None, group_manager=None):
         self.sync_dir = sync_dir
         self.on_conflict = on_conflict
         self.on_before_delete = on_before_delete
+        self._group_manager = group_manager
         self._app = web.Application()
         self._app.router.add_put('/file/{path:.*}', self._handle_put)
         self._app.router.add_delete('/file/{path:.*}', self._handle_delete)
         self._app.router.add_get('/files', self._handle_list)
+        self._app.router.add_get('/info', self._handle_info)
         self._runner = None
 
     async def _handle_put(self, request: web.Request) -> web.Response:
@@ -70,6 +72,11 @@ class SyncServer:
                     rel = str(f.relative_to(self.sync_dir)).replace('\\', '/')
                     files[rel] = f.stat().st_mtime
         return web.json_response(files)
+
+    async def _handle_info(self, request: web.Request) -> web.Response:
+        my_group = self._group_manager.my_group if self._group_manager else None
+        known_groups = [g.name for g in self._group_manager.groups] if self._group_manager else []
+        return web.json_response({"group": my_group, "groups": known_groups})
 
     async def start(self) -> None:
         self._runner = web.AppRunner(self._app)
