@@ -1,5 +1,6 @@
 # src/peer_manager.py
 import asyncio
+import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Optional
@@ -133,8 +134,9 @@ class PeerManager:
         if not self.sync_dir.exists():
             return
         local_files: dict[str, float] = {}
-        for f in self.sync_dir.rglob('*'):
-            if f.is_file():
+        for root, _dirs, files in os.walk(self.sync_dir, onerror=lambda _: None):
+            for name in files:
+                f = Path(root) / name
                 rel = str(f.relative_to(self.sync_dir)).replace('\\', '/')
                 local_files[rel] = f.stat().st_mtime
 

@@ -1,5 +1,6 @@
 # src/gui/app.py
 import asyncio
+import os
 import queue
 import threading
 from pathlib import Path
@@ -182,11 +183,11 @@ class App(ctk.CTk):
     def refresh_file_list(self) -> None:
         if self._sync_dir is None or not self._sync_dir.exists():
             return
-        current = {
-            str(f.relative_to(self._sync_dir)).replace('\\', '/')
-            for f in self._sync_dir.rglob('*')
-            if f.is_file()
-        }
+        current = set()
+        for root, _dirs, files in os.walk(self._sync_dir, onerror=lambda _: None):
+            for name in files:
+                rel = str((Path(root) / name).relative_to(self._sync_dir)).replace('\\', '/')
+                current.add(rel)
         for rel in list(self._file_rows.keys()):
             if rel not in current:
                 self._file_rows[rel].destroy()

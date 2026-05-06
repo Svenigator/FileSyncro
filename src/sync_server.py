@@ -64,8 +64,9 @@ class SyncServer:
     async def _handle_list(self, request: web.Request) -> web.Response:
         files: dict[str, float] = {}
         if self.sync_dir.exists():
-            for f in self.sync_dir.rglob('*'):
-                if f.is_file():
+            for root, _dirs, file_names in os.walk(self.sync_dir, onerror=lambda _: None):
+                for name in file_names:
+                    f = Path(root) / name
                     rel = str(f.relative_to(self.sync_dir)).replace('\\', '/')
                     files[rel] = f.stat().st_mtime
         return web.json_response(files)
