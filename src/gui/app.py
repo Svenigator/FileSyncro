@@ -1,6 +1,5 @@
 # src/gui/app.py
 import asyncio
-import os
 import queue
 import threading
 from pathlib import Path
@@ -26,14 +25,12 @@ class App(ctk.CTk):
         activity_queue: queue.Queue,
         delete_queue: queue.Queue,
         peer_queue: queue.Queue,
-        file_queue: queue.Queue,
         on_sync_dir_changed: Callable[[Path], None],
         on_manual_sync: Callable[[], None],
         on_add_peer_manual: Callable[[str, int], None],
         on_refresh_peers: Callable[[], None],
-        on_push_file: Callable[[str], None],
         group_manager: GroupManager,
-        on_group_changed: Callable[[list[str] | None], None],
+        on_group_changed: Callable[[Optional[str]], None],
         initial_sync_dir: Path,
     ):
         super().__init__()
@@ -51,18 +48,13 @@ class App(ctk.CTk):
         self._on_add_peer_manual = on_add_peer_manual
         self._on_refresh_peers = on_refresh_peers
         self._peer_rows: dict[str, ctk.CTkFrame] = {}
-        self._file_queue = file_queue
-        self._on_push_file = on_push_file
         self._sync_dir: Path = initial_sync_dir
-        self._file_rows: dict[str, ctk.CTkFrame] = {}
         self._group_manager = group_manager
         self._on_group_changed = on_group_changed
 
         self._build_ui()
         self._folder_label.configure(text=str(initial_sync_dir))
-        self.refresh_file_list()
-        # Restore persisted active group on startup
-        active = self._group_manager.active_group_name
+        active = self._group_manager.my_group
         if active and any(g.name == active for g in self._group_manager.groups):
             self._group_var.set(active)
             self._on_group_selected(active)
@@ -97,12 +89,14 @@ class App(ctk.CTk):
         self._device_frame = ctk.CTkScrollableFrame(self, height=110)
         self._device_frame.pack(fill="x", padx=16)
 
-        # Manuell hinzufügen
+        # Manuell hinzufügen + Aktualisieren
         manual_frame = ctk.CTkFrame(self, fg_color="transparent")
         manual_frame.pack(fill="x", padx=16, pady=4)
-        self._ip_entry = ctk.CTkEntry(manual_frame, placeholder_text="IP-Adresse", width=180)
+        self._ip_entry = ctk.CTkEntry(manual_frame, placeholder_text="IP-Adresse", width=160)
         self._ip_entry.pack(side="left", padx=(0, 4))
-        ctk.CTkButton(manual_frame, text="Hinzufügen", width=100, command=self._add_manual_peer).pack(side="left")
+        ctk.CTkButton(manual_frame, text="Hinzufügen", width=90, command=self._add_manual_peer).pack(side="left", padx=(0, 4))
+        ctk.CTkButton(manual_frame, text="Aktualisieren", width=110,
+                      command=self._refresh_peers).pack(side="left")
 
         # Sync-Button + Status
         action_frame = ctk.CTkFrame(self, fg_color="transparent")
@@ -110,17 +104,10 @@ class App(ctk.CTk):
         ctk.CTkButton(action_frame, text="Jetzt synchronisieren", command=self._manual_sync).pack(side="left")
         self._status_label = ctk.CTkLabel(action_frame, text="Status: bereit")
         self._status_label.pack(side="left", padx=16)
-        ctk.CTkButton(action_frame, text="Aktualisieren", width=110,
-                      command=self._refresh_peers).pack(side="left", padx=(8, 0))
-
-        # Dateien
-        ctk.CTkLabel(self, text="Dateien im Sync-Ordner", anchor="w").pack(fill="x", padx=16, pady=(8, 2))
-        self._file_frame = ctk.CTkScrollableFrame(self, height=100)
-        self._file_frame.pack(fill="x", padx=16)
 
         # Aktivitätslog
         ctk.CTkLabel(self, text="Aktivität", anchor="w").pack(fill="x", padx=16, pady=(8, 2))
-        self._log = ctk.CTkTextbox(self, height=160, state="disabled")
+        self._log = ctk.CTkTextbox(self, height=320, state="disabled")
         self._log.pack(fill="both", expand=True, padx=16, pady=(0, 16))
 
     def _choose_folder(self):
@@ -129,7 +116,6 @@ class App(ctk.CTk):
             self._folder_label.configure(text=path)
             self._sync_dir = Path(path)
             self._on_sync_dir_changed(Path(path))
-            self.refresh_file_list()
 
     def _manual_sync(self):
         self._status_label.configure(text="Status: synchronisiere…")
@@ -163,17 +149,10 @@ class App(ctk.CTk):
             del self._peer_rows[name]
 
     def _on_group_selected(self, value: str) -> None:
-        if value == "Alle Geräte":
-            self._group_manager.set_active(None)
-            self._on_group_changed(None)
-        else:
-            self._group_manager.set_active(value)
-            group = next((g for g in self._group_manager.groups if g.name == value), None)
-            self._on_group_changed(group.peer_names if group else None)
+        self._on_group_changed(value if value != "Alle Geräte" else None)
 
     def _open_group_dialog(self) -> None:
-        known = list(self._peer_rows.keys())
-        GroupDialog(self, self._group_manager, known_peers=known)
+        GroupDialog(self, self._group_manager)
         names = ["Alle Geräte"] + [g.name for g in self._group_manager.groups]
         current = self._group_var.get()
         self._group_combo.configure(values=names)
@@ -182,30 +161,6 @@ class App(ctk.CTk):
             self._on_group_changed(None)
         else:
             self._on_group_selected(current)
-
-    def refresh_file_list(self) -> None:
-        if self._sync_dir is None or not self._sync_dir.exists():
-            return
-        current = set()
-        for root, _dirs, files in os.walk(self._sync_dir, onerror=lambda _: None):
-            for name in files:
-                rel = str((Path(root) / name).relative_to(self._sync_dir)).replace('\\', '/')
-                current.add(rel)
-        for rel in list(self._file_rows.keys()):
-            if rel not in current:
-                self._file_rows[rel].destroy()
-                del self._file_rows[rel]
-        for rel in sorted(current):
-            if rel not in self._file_rows:
-                row = ctk.CTkFrame(self._file_frame, fg_color="transparent")
-                row.pack(fill="x", pady=1)
-                ctk.CTkLabel(row, text=rel, anchor="w").pack(side="left", fill="x", expand=True)
-                ctk.CTkButton(row, text="Push", width=60,
-                              command=lambda r=rel: self._push_file(r)).pack(side="right")
-                self._file_rows[rel] = row
-
-    def _push_file(self, rel_path: str) -> None:
-        asyncio.run_coroutine_threadsafe(self._on_push_file(rel_path), self._async_loop)
 
     def log(self, message: str) -> None:
         self._log.configure(state="normal")
@@ -264,16 +219,12 @@ class App(ctk.CTk):
         except queue.Empty:
             pass
 
-        # Datei-Updates
-        needs_refresh = False
-        try:
-            while True:
-                msg = self._file_queue.get_nowait()
-                if msg.get("action") == "refresh":
-                    needs_refresh = True
-        except queue.Empty:
-            pass
-        if needs_refresh:
-            self.refresh_file_list()
+        # Gruppen-Combobox aktuell halten
+        current_names = ["Alle Geräte"] + [g.name for g in self._group_manager.groups]
+        configured = list(self._group_combo.cget("values"))
+        if current_names != configured:
+            self._group_combo.configure(values=current_names)
+            if self._group_var.get() not in current_names:
+                self._group_var.set("Alle Geräte")
 
         self.after(100, self._poll_queues)
