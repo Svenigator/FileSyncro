@@ -18,15 +18,12 @@ def _get_hostname() -> str:
 
 
 def main():
-    # Queues für Thread-Kommunikation
     conflict_queue: queue.Queue = queue.Queue()
     activity_queue: queue.Queue = queue.Queue()
     delete_queue: queue.Queue = queue.Queue()
     peer_queue: queue.Queue = queue.Queue()
-    file_queue: queue.Queue = queue.Queue()
     group_manager = GroupManager()
 
-    # asyncio-Loop in Hintergrund-Thread
     async_loop = asyncio.new_event_loop()
 
     sync_dir: list[Path] = [Path.home() / "FileSyncro"]
@@ -38,6 +35,10 @@ def main():
             f"{'●' if peer.reachable else '○'} {peer.name} {'erreichbar' if peer.reachable else 'nicht erreichbar'}"
         )
     )
+
+    # Restore persisted group selection on startup
+    if group_manager.my_group:
+        peer_manager.set_my_group(group_manager.my_group)
 
     def on_conflict(rel_path, local_ts, remote_ts, data, future):
         conflict_queue.put({
@@ -51,14 +52,18 @@ def main():
     def on_before_delete(rel_path: str):
         file_watcher.suppress_delete(sync_dir[0] / rel_path)
 
-    sync_server = SyncServer(sync_dir=sync_dir[0], on_conflict=on_conflict, on_before_delete=on_before_delete)
+    sync_server = SyncServer(
+        sync_dir=sync_dir[0],
+        on_conflict=on_conflict,
+        on_before_delete=on_before_delete,
+        group_manager=group_manager,
+    )
 
     async def on_file_changed(path: Path):
         try:
             rel = str(path.relative_to(sync_dir[0])).replace('\\', '/')
         except ValueError:
             return
-        file_queue.put({"action": "refresh"})
         results = await peer_manager.send_file(rel)
         ok = sum(1 for v in results.values() if v)
         activity_queue.put(f"✓ {path.name} → {ok} Gerät(e)")
@@ -80,7 +85,6 @@ def main():
         if result == "all":
             await peer_manager.delete_file(rel)
             activity_queue.put(f"🗑 {path.name} auf allen Geräten gelöscht")
-        file_queue.put({"action": "refresh"})
 
     file_watcher = FileWatcher(
         sync_dir=sync_dir[0],
@@ -120,7 +124,6 @@ def main():
         file_watcher.stop()
         file_watcher.sync_dir = new_path
         file_watcher.start(async_loop)
-        file_queue.put({"action": "refresh"})
 
     async def manual_sync():
         await peer_manager.sync_with_all()
@@ -130,12 +133,18 @@ def main():
         while True:
             await asyncio.sleep(30)
             removed = await peer_manager.ping_all()
+            for peer in peer_manager.peers:
+                if peer.known_groups:
+                    group_manager.merge_groups(peer.known_groups)
             for name in removed:
                 peer_queue.put({"action": "remove", "name": name})
                 activity_queue.put(f"○ {name} entfernt (nicht erreichbar)")
 
     async def refresh_peers():
         removed = await peer_manager.ping_all()
+        for peer in peer_manager.peers:
+            if peer.known_groups:
+                group_manager.merge_groups(peer.known_groups)
         for name in removed:
             peer_queue.put({"action": "remove", "name": name})
             activity_queue.put(f"○ {name} entfernt (nicht erreichbar)")
@@ -147,17 +156,13 @@ def main():
         peer_queue.put({"action": "add", "peer": peer})
         activity_queue.put(f"+ {ip} manuell hinzugefügt")
 
-    async def on_push_file(rel_path: str) -> None:
-        results = await peer_manager.send_file(rel_path)
-        ok = sum(1 for v in results.values() if v)
-        activity_queue.put(f"✓ {rel_path} → {ok} Gerät(e) manuell gesendet")
-
-    def on_group_changed(names: list[str] | None) -> None:
-        peer_manager.set_active_filter(names)
-        if names is None:
+    def on_group_changed(name: str | None) -> None:
+        peer_manager.set_my_group(name)
+        group_manager.set_my_group(name)
+        if name is None:
             activity_queue.put("● Sync-Ziel: alle Geräte")
         else:
-            activity_queue.put(f"● Sync-Ziel: {len(names)} Gerät(e) in Gruppe")
+            activity_queue.put(f"● Sync-Ziel: Gruppe {name}")
 
     asyncio.run_coroutine_threadsafe(async_main(), async_loop)
     thread = threading.Thread(target=async_loop.run_forever, daemon=True)
@@ -169,19 +174,16 @@ def main():
         activity_queue=activity_queue,
         delete_queue=delete_queue,
         peer_queue=peer_queue,
-        file_queue=file_queue,
         on_sync_dir_changed=on_sync_dir_changed,
         on_manual_sync=manual_sync,
         on_add_peer_manual=add_peer_manual,
         on_refresh_peers=refresh_peers,
-        on_push_file=on_push_file,
         group_manager=group_manager,
         on_group_changed=on_group_changed,
         initial_sync_dir=sync_dir[0],
     )
     app.mainloop()
 
-    # Cleanup beim Schließen
     async_loop.call_soon_threadsafe(async_loop.stop)
     file_watcher.stop()
 
