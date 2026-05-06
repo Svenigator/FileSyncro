@@ -27,6 +27,7 @@ class App(ctk.CTk):
         on_sync_dir_changed: Callable[[Path], None],
         on_manual_sync: Callable[[], None],
         on_add_peer_manual: Callable[[str, int], None],
+        on_refresh_peers: Callable[[], None],
     ):
         super().__init__()
         self.title("FileSyncro")
@@ -41,6 +42,7 @@ class App(ctk.CTk):
         self._on_sync_dir_changed = on_sync_dir_changed
         self._on_manual_sync = on_manual_sync
         self._on_add_peer_manual = on_add_peer_manual
+        self._on_refresh_peers = on_refresh_peers
         self._peer_rows: dict[str, ctk.CTkFrame] = {}
 
         self._build_ui()
@@ -73,6 +75,8 @@ class App(ctk.CTk):
         ctk.CTkButton(action_frame, text="Jetzt synchronisieren", command=self._manual_sync).pack(side="left")
         self._status_label = ctk.CTkLabel(action_frame, text="Status: bereit")
         self._status_label.pack(side="left", padx=16)
+        ctk.CTkButton(action_frame, text="Aktualisieren", width=110,
+                      command=self._refresh_peers).pack(side="left", padx=(8, 0))
 
         # Aktivitätslog
         ctk.CTkLabel(self, text="Aktivität", anchor="w").pack(fill="x", padx=16, pady=(8, 2))
@@ -94,6 +98,9 @@ class App(ctk.CTk):
         if ip:
             self._on_add_peer_manual(ip, 5757)
             self._ip_entry.delete(0, "end")
+
+    def _refresh_peers(self) -> None:
+        asyncio.run_coroutine_threadsafe(self._on_refresh_peers(), self._async_loop)
 
     def update_peer(self, peer: Peer) -> None:
         if peer.name not in self._peer_rows:

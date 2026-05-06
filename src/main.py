@@ -105,6 +105,7 @@ def main():
         await sync_server.start()
         await discovery.start()
         file_watcher.start(async_loop)
+        asyncio.create_task(periodic_ping())
 
     def on_sync_dir_changed(new_path: Path):
         new_path.mkdir(parents=True, exist_ok=True)
@@ -118,6 +119,21 @@ def main():
     async def manual_sync():
         await peer_manager.sync_with_all()
         activity_queue.put("✓ Manueller Sync abgeschlossen")
+
+    async def periodic_ping():
+        while True:
+            await asyncio.sleep(30)
+            removed = await peer_manager.ping_all()
+            for name in removed:
+                peer_queue.put({"action": "remove", "name": name})
+                activity_queue.put(f"○ {name} entfernt (nicht erreichbar)")
+
+    async def refresh_peers():
+        removed = await peer_manager.ping_all()
+        for name in removed:
+            peer_queue.put({"action": "remove", "name": name})
+            activity_queue.put(f"○ {name} entfernt (nicht erreichbar)")
+        activity_queue.put(f"● {len(peer_manager.peers)} Gerät(e) erreichbar")
 
     def add_peer_manual(ip: str, port: int):
         peer = Peer(name=ip, ip=ip, port=port)
@@ -138,6 +154,7 @@ def main():
         on_sync_dir_changed=on_sync_dir_changed,
         on_manual_sync=manual_sync,
         on_add_peer_manual=add_peer_manual,
+        on_refresh_peers=refresh_peers,
     )
     app.mainloop()
 
