@@ -73,3 +73,9 @@ def test_persistence_roundtrip(tmp_path):
     names = [g.name for g in gm2.groups]
     assert "Bühne" in names
     assert "Technik" in names
+
+
+def test_set_my_group_ignores_nonexistent_name(tmp_path):
+    gm = GroupManager(config_path=tmp_path / "groups.json")
+    gm.set_my_group("doesnotexist")
+    assert gm.my_group is None

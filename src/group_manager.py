@@ -37,6 +37,8 @@ class GroupManager:
         self._save()
 
     def set_my_group(self, name: str | None) -> None:
+        if name is not None and name not in self._groups:
+            name = None
         self._my_group = name
         self._save()
 
@@ -57,7 +59,9 @@ class GroupManager:
             self._my_group = data.get("my_group")
             for name in data.get("groups", []):
                 self._groups[name] = Group(name=name)
-        except (json.JSONDecodeError, KeyError):
+            if self._my_group is not None and self._my_group not in self._groups:
+                self._my_group = None
+        except json.JSONDecodeError:
             pass
 
     def _save(self) -> None:
