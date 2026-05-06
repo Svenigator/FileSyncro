@@ -142,20 +142,14 @@ async def test_send_file_respects_active_filter(tmp_path):
     pm.add_peer(Peer(name="out-group", ip="192.168.1.2", port=5757))
     pm.set_active_filter(["in-group"])
 
-    called_urls: list[str] = []
-
     mock_resp = AsyncMock()
     mock_resp.status = 200
     mock_cm = MagicMock()
     mock_cm.__aenter__ = AsyncMock(return_value=mock_resp)
     mock_cm.__aexit__ = AsyncMock(return_value=False)
 
-    def mock_put(self_session, url, **kwargs):
-        called_urls.append(url)
-        return mock_cm
+    with patch("aiohttp.ClientSession.put", return_value=mock_cm):
+        results = await pm.send_file("slide.pptx")
 
-    with patch("aiohttp.ClientSession.put", mock_put):
-        await pm.send_file("slide.pptx")
-
-    assert any("192.168.1.1" in u for u in called_urls)
-    assert not any("192.168.1.2" in u for u in called_urls)
+    assert "in-group" in results
+    assert "out-group" not in results

@@ -121,6 +121,7 @@ class PeerManager:
 
     async def ping_all(self) -> list[str]:
         removed: list[str] = []
+        # Health-check ALL known peers regardless of active group filter
         for name, peer in list(self._peers.items()):
             reachable = await self.ping(peer)
             if not reachable:
