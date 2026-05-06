@@ -215,12 +215,15 @@ class App(ctk.CTk):
             pass
 
         # Datei-Updates
+        needs_refresh = False
         try:
             while True:
                 msg = self._file_queue.get_nowait()
                 if msg.get("action") == "refresh":
-                    self.refresh_file_list()
+                    needs_refresh = True
         except queue.Empty:
             pass
+        if needs_refresh:
+            self.refresh_file_list()
 
         self.after(100, self._poll_queues)
