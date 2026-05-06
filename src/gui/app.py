@@ -8,7 +8,8 @@ from typing import Callable, Optional
 
 import customtkinter as ctk
 
-from src.gui.dialogs import ConflictDialog, DeleteDialog
+from src.group_manager import GroupManager
+from src.gui.dialogs import ConflictDialog, DeleteDialog, GroupDialog
 from src.peer_manager import Peer
 
 
@@ -30,6 +31,8 @@ class App(ctk.CTk):
         on_add_peer_manual: Callable[[str, int], None],
         on_refresh_peers: Callable[[], None],
         on_push_file: Callable[[str], None],
+        group_manager: GroupManager,
+        on_group_changed: Callable[[list[str] | None], None],
     ):
         super().__init__()
         self.title("FileSyncro")
@@ -50,6 +53,8 @@ class App(ctk.CTk):
         self._on_push_file = on_push_file
         self._sync_dir: Path | None = None
         self._file_rows: dict[str, ctk.CTkFrame] = {}
+        self._group_manager = group_manager
+        self._on_group_changed = on_group_changed
 
         self._build_ui()
         self._poll_queues()
@@ -62,6 +67,21 @@ class App(ctk.CTk):
         ctk.CTkButton(folder_frame, text="...", width=40, command=self._choose_folder).pack(side="right", padx=8)
         self._folder_label = ctk.CTkLabel(folder_frame, text="(nicht gewählt)", anchor="w")
         self._folder_label.pack(side="left", fill="x", expand=True, padx=4)
+
+        # Gruppen
+        group_row = ctk.CTkFrame(self, fg_color="transparent")
+        group_row.pack(fill="x", padx=16, pady=(4, 0))
+        ctk.CTkLabel(group_row, text="Gruppe:").pack(side="left", padx=(0, 8))
+        group_names = ["Alle Geräte"] + [g.name for g in self._group_manager.groups]
+        self._group_var = ctk.StringVar(value="Alle Geräte")
+        self._group_combo = ctk.CTkComboBox(
+            group_row, variable=self._group_var, values=group_names,
+            width=180, command=self._on_group_selected,
+        )
+        self._group_combo.pack(side="left")
+        ctk.CTkButton(
+            group_row, text="Verwalten", width=80, command=self._open_group_dialog,
+        ).pack(side="left", padx=(8, 0))
 
         # Geräteliste
         ctk.CTkLabel(self, text="Verbundene Geräte", anchor="w").pack(fill="x", padx=16, pady=(12, 2))
@@ -132,6 +152,25 @@ class App(ctk.CTk):
         if name in self._peer_rows:
             self._peer_rows[name].destroy()
             del self._peer_rows[name]
+
+    def _on_group_selected(self, value: str) -> None:
+        if value == "Alle Geräte":
+            self._on_group_changed(None)
+        else:
+            group = next((g for g in self._group_manager.groups if g.name == value), None)
+            self._on_group_changed(group.peer_names if group else None)
+
+    def _open_group_dialog(self) -> None:
+        known = list(self._peer_rows.keys())
+        GroupDialog(self, self._group_manager, known_peers=known)
+        names = ["Alle Geräte"] + [g.name for g in self._group_manager.groups]
+        current = self._group_var.get()
+        self._group_combo.configure(values=names)
+        if current not in names:
+            self._group_var.set("Alle Geräte")
+            self._on_group_changed(None)
+        else:
+            self._on_group_selected(current)
 
     def refresh_file_list(self) -> None:
         if self._sync_dir is None or not self._sync_dir.exists():

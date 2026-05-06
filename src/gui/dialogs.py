@@ -61,3 +61,89 @@ class DeleteDialog(ctk.CTkToplevel):
     def _all_devices(self):
         self.result = "all"
         self.destroy()
+
+
+class GroupDialog(ctk.CTkToplevel):
+    def __init__(self, parent, group_manager, known_peers: list[str]):
+        super().__init__(parent)
+        self.title("Gruppen verwalten")
+        self.geometry("520x360")
+        self.resizable(False, False)
+        self.grab_set()
+        self._gm = group_manager
+        self._known_peers = known_peers
+        self._selected_group: str | None = None
+        self._peer_vars: dict[str, ctk.BooleanVar] = {}
+        self._build()
+        self.wait_window()
+
+    def _build(self):
+        left = ctk.CTkFrame(self)
+        left.pack(side="left", fill="y", padx=(12, 4), pady=12)
+        ctk.CTkLabel(left, text="Gruppen", font=ctk.CTkFont(weight="bold")).pack(pady=(0, 4))
+        self._group_list = ctk.CTkScrollableFrame(left, width=160, height=200)
+        self._group_list.pack()
+        new_frame = ctk.CTkFrame(left, fg_color="transparent")
+        new_frame.pack(fill="x", pady=(8, 0))
+        self._new_entry = ctk.CTkEntry(new_frame, placeholder_text="Neuer Name", width=120)
+        self._new_entry.pack(side="left", padx=(0, 4))
+        ctk.CTkButton(new_frame, text="+", width=30, command=self._create_group).pack(side="left")
+
+        right = ctk.CTkFrame(self)
+        right.pack(side="left", fill="both", expand=True, padx=(4, 12), pady=12)
+        ctk.CTkLabel(right, text="Mitglieder", font=ctk.CTkFont(weight="bold")).pack(pady=(0, 4))
+        self._peer_frame = ctk.CTkScrollableFrame(right, height=200)
+        self._peer_frame.pack(fill="both", expand=True)
+
+        ctk.CTkButton(self, text="Schließen", command=self.destroy).pack(pady=8)
+        self._refresh_group_list()
+
+    def _refresh_group_list(self):
+        for w in self._group_list.winfo_children():
+            w.destroy()
+        for group in self._gm.groups:
+            row = ctk.CTkFrame(self._group_list, fg_color="transparent")
+            row.pack(fill="x", pady=2)
+            ctk.CTkButton(
+                row, text=group.name, anchor="w",
+                command=lambda n=group.name: self._select_group(n),
+            ).pack(side="left", fill="x", expand=True)
+            ctk.CTkButton(
+                row, text="✕", width=28,
+                command=lambda n=group.name: self._delete_group(n),
+            ).pack(side="right")
+
+    def _select_group(self, name: str):
+        self._selected_group = name
+        for w in self._peer_frame.winfo_children():
+            w.destroy()
+        self._peer_vars.clear()
+        group = next((g for g in self._gm.groups if g.name == name), None)
+        if group is None:
+            return
+        for peer_name in self._known_peers:
+            var = ctk.BooleanVar(value=peer_name in group.peer_names)
+            self._peer_vars[peer_name] = var
+            ctk.CTkCheckBox(
+                self._peer_frame, text=peer_name, variable=var,
+                command=lambda p=peer_name, v=var: self._toggle_peer(p, v),
+            ).pack(anchor="w", pady=2)
+
+    def _toggle_peer(self, peer_name: str, var: ctk.BooleanVar):
+        if self._selected_group:
+            self._gm.set_peer_membership(self._selected_group, peer_name, var.get())
+
+    def _create_group(self):
+        name = self._new_entry.get().strip()
+        if name and not any(g.name == name for g in self._gm.groups):
+            self._gm.create_group(name)
+            self._new_entry.delete(0, "end")
+            self._refresh_group_list()
+
+    def _delete_group(self, name: str):
+        self._gm.delete_group(name)
+        if self._selected_group == name:
+            self._selected_group = None
+            for w in self._peer_frame.winfo_children():
+                w.destroy()
+        self._refresh_group_list()

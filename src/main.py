@@ -7,6 +7,7 @@ from pathlib import Path
 
 from src.discovery import Discovery
 from src.file_watcher import FileWatcher
+from src.group_manager import GroupManager
 from src.gui.app import App
 from src.peer_manager import Peer, PeerManager
 from src.sync_server import SyncServer
@@ -23,6 +24,7 @@ def main():
     delete_queue: queue.Queue = queue.Queue()
     peer_queue: queue.Queue = queue.Queue()
     file_queue: queue.Queue = queue.Queue()
+    group_manager = GroupManager()
 
     # asyncio-Loop in Hintergrund-Thread
     async_loop = asyncio.new_event_loop()
@@ -150,6 +152,13 @@ def main():
         ok = sum(1 for v in results.values() if v)
         activity_queue.put(f"✓ {rel_path} → {ok} Gerät(e) manuell gesendet")
 
+    def on_group_changed(names: list[str] | None) -> None:
+        peer_manager.set_active_filter(names)
+        if names is None:
+            activity_queue.put("● Sync-Ziel: alle Geräte")
+        else:
+            activity_queue.put(f"● Sync-Ziel: {len(names)} Gerät(e) in Gruppe")
+
     asyncio.run_coroutine_threadsafe(async_main(), async_loop)
     thread = threading.Thread(target=async_loop.run_forever, daemon=True)
     thread.start()
@@ -166,6 +175,8 @@ def main():
         on_add_peer_manual=add_peer_manual,
         on_refresh_peers=refresh_peers,
         on_push_file=on_push_file,
+        group_manager=group_manager,
+        on_group_changed=on_group_changed,
     )
     app.mainloop()
 
