@@ -34,6 +34,7 @@ class App(ctk.CTk):
         on_push_file: Callable[[str], None],
         group_manager: GroupManager,
         on_group_changed: Callable[[list[str] | None], None],
+        initial_sync_dir: Path,
     ):
         super().__init__()
         self.title("FileSyncro")
@@ -52,12 +53,14 @@ class App(ctk.CTk):
         self._peer_rows: dict[str, ctk.CTkFrame] = {}
         self._file_queue = file_queue
         self._on_push_file = on_push_file
-        self._sync_dir: Path | None = None
+        self._sync_dir: Path = initial_sync_dir
         self._file_rows: dict[str, ctk.CTkFrame] = {}
         self._group_manager = group_manager
         self._on_group_changed = on_group_changed
 
         self._build_ui()
+        self._folder_label.configure(text=str(initial_sync_dir))
+        self.refresh_file_list()
         # Restore persisted active group on startup
         active = self._group_manager.active_group_name
         if active and any(g.name == active for g in self._group_manager.groups):

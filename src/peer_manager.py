@@ -13,6 +13,7 @@ class Peer:
     ip: str
     port: int = 5757
     reachable: bool = True
+    consecutive_failures: int = 0
 
 
 class PeerManager:
@@ -125,9 +126,13 @@ class PeerManager:
         # Health-check ALL known peers regardless of active group filter
         for name, peer in list(self._peers.items()):
             reachable = await self.ping(peer)
-            if not reachable:
-                self.remove_peer(name)
-                removed.append(name)
+            if reachable:
+                peer.consecutive_failures = 0
+            else:
+                peer.consecutive_failures += 1
+                if peer.consecutive_failures >= 3:
+                    self.remove_peer(name)
+                    removed.append(name)
         return removed
 
     async def sync_with_all(self) -> None:

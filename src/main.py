@@ -177,6 +177,7 @@ def main():
         on_push_file=on_push_file,
         group_manager=group_manager,
         on_group_changed=on_group_changed,
+        initial_sync_dir=sync_dir[0],
     )
     app.mainloop()
 

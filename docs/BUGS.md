@@ -5,6 +5,8 @@
 ## In Progress
 
 ## Fixed
+- [x] [MED] Gerät fällt bei kurzem Netzwerk-Aussetzer aus der Liste — `ping_all` entfernt jetzt erst nach 3 aufeinanderfolgenden fehlgeschlagenen Pings (~90 Sekunden); ein erfolgreicher Ping setzt den Zähler zurück.
+- [x] [MED] Dateiliste beim Start leer — `initial_sync_dir` wird jetzt beim App-Start an die GUI übergeben; Dateiliste und Ordner-Label werden sofort mit dem Default-Sync-Ordner befüllt.
 - [x] [HIGH] Sync überschreibt neuere Datei — SyncServer auto-rejects incoming files where `local_ts > remote_ts + 1.0`, returning 409 `outdated` without invoking the conflict dialog.
 - [x] [MED] Gerät bleibt nach Programmende in der Liste — Periodic 30s ping removes non-responding peers automatically; on-demand Refresh button available for immediate check.
 - [x] [MED] Fehlende Fehlerausgabe bei fehlenden Berechtigungen — `_handle_put` catches `PermissionError` and returns HTTP 403 with the error message.
