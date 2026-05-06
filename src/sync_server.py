@@ -31,6 +31,8 @@ class SyncServer:
             local_ts = file_path.stat().st_mtime
             if abs(local_ts - remote_ts) < 1.0:
                 return web.Response(status=200, text='unchanged')
+            if local_ts > remote_ts + 1.0:
+                return web.Response(status=409, text='outdated')
             if self.on_conflict:
                 loop = asyncio.get_running_loop()
                 future: asyncio.Future = loop.create_future()
@@ -40,8 +42,11 @@ class SyncServer:
                     return web.Response(status=409, text='conflict rejected')
 
         file_path.parent.mkdir(parents=True, exist_ok=True)
-        file_path.write_bytes(data)
-        os.utime(file_path, (remote_ts, remote_ts))
+        try:
+            file_path.write_bytes(data)
+            os.utime(file_path, (remote_ts, remote_ts))
+        except PermissionError as e:
+            return web.Response(status=403, text=f'permission denied: {e}')
         return web.Response(status=200, text='ok')
 
     async def _handle_delete(self, request: web.Request) -> web.Response:

@@ -118,3 +118,50 @@ async def test_conflict_calls_on_conflict_and_accepts(tmp_path):
         assert f.read_bytes() == b"remote version"
     finally:
         await srv.stop()
+
+
+async def test_put_older_file_is_auto_rejected(tmp_path):
+    f = tmp_path / "slide.pptx"
+    f.write_bytes(b"newer local version")
+    os.utime(f, (2000000.0, 2000000.0))
+
+    conflicts = []
+
+    def on_conflict(rel_path, local_ts, remote_ts, data, future):
+        conflicts.append(rel_path)
+        asyncio.get_event_loop().call_soon_threadsafe(future.set_result, True)
+
+    srv = SyncServer(sync_dir=tmp_path, on_conflict=on_conflict)
+    await srv.start()
+    try:
+        async with aiohttp.ClientSession() as s:
+            resp = await s.put(
+                f"http://localhost:{SyncServer.PORT}/file/slide.pptx",
+                data=b"older remote version",
+                headers={"X-Timestamp": "1000000.0"},
+            )
+            assert resp.status == 409
+            assert (await resp.text()) == "outdated"
+        assert len(conflicts) == 0
+        assert f.read_bytes() == b"newer local version"
+    finally:
+        await srv.stop()
+
+
+async def test_put_returns_403_on_permission_error(tmp_path):
+    from unittest.mock import patch
+
+    srv = SyncServer(sync_dir=tmp_path)
+    await srv.start()
+    try:
+        with patch("pathlib.Path.write_bytes", side_effect=PermissionError("access denied")):
+            async with aiohttp.ClientSession() as s:
+                resp = await s.put(
+                    f"http://localhost:{SyncServer.PORT}/file/locked.pptx",
+                    data=b"data",
+                    headers={"X-Timestamp": "1000000.0"},
+                )
+                assert resp.status == 403
+                assert "permission" in (await resp.text()).lower()
+    finally:
+        await srv.stop()
