@@ -1,6 +1,7 @@
 # Bugs
 
 ## Open
+- [ ] [MED] Gerät bleibt nach Programmende in der Liste — Wenn ein Gerät FileSyncro schließt, wird es nicht sofort aus der Geräteliste entfernt. mDNS-Abmeldung kann verzögert sein oder ganz ausbleiben. Sync-Versuche an das Gerät schlagen lautlos fehl.
 - [ ] [HIGH] Sync überschreibt neuere Datei — Beim Sync wird die neuere Zieldatei durch eine ältere Quelldatei überschrieben
 - [ ] [MED] Fehlende Fehlerausgabe — Bei fehlenden Berechtigungen wird kein verständlicher Fehler ausgegeben
 
