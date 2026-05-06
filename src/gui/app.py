@@ -24,14 +24,16 @@ class App(ctk.CTk):
         activity_queue: queue.Queue,
         delete_queue: queue.Queue,
         peer_queue: queue.Queue,
+        file_queue: queue.Queue,
         on_sync_dir_changed: Callable[[Path], None],
         on_manual_sync: Callable[[], None],
         on_add_peer_manual: Callable[[str, int], None],
         on_refresh_peers: Callable[[], None],
+        on_push_file: Callable[[str], None],
     ):
         super().__init__()
         self.title("FileSyncro")
-        self.geometry("560x520")
+        self.geometry("560x700")
         self.resizable(False, False)
 
         self._async_loop = async_loop
@@ -44,6 +46,10 @@ class App(ctk.CTk):
         self._on_add_peer_manual = on_add_peer_manual
         self._on_refresh_peers = on_refresh_peers
         self._peer_rows: dict[str, ctk.CTkFrame] = {}
+        self._file_queue = file_queue
+        self._on_push_file = on_push_file
+        self._sync_dir: Path | None = None
+        self._file_rows: dict[str, ctk.CTkFrame] = {}
 
         self._build_ui()
         self._poll_queues()
@@ -59,7 +65,7 @@ class App(ctk.CTk):
 
         # Geräteliste
         ctk.CTkLabel(self, text="Verbundene Geräte", anchor="w").pack(fill="x", padx=16, pady=(12, 2))
-        self._device_frame = ctk.CTkScrollableFrame(self, height=140)
+        self._device_frame = ctk.CTkScrollableFrame(self, height=110)
         self._device_frame.pack(fill="x", padx=16)
 
         # Manuell hinzufügen
@@ -78,6 +84,11 @@ class App(ctk.CTk):
         ctk.CTkButton(action_frame, text="Aktualisieren", width=110,
                       command=self._refresh_peers).pack(side="left", padx=(8, 0))
 
+        # Dateien
+        ctk.CTkLabel(self, text="Dateien im Sync-Ordner", anchor="w").pack(fill="x", padx=16, pady=(8, 2))
+        self._file_frame = ctk.CTkScrollableFrame(self, height=100)
+        self._file_frame.pack(fill="x", padx=16)
+
         # Aktivitätslog
         ctk.CTkLabel(self, text="Aktivität", anchor="w").pack(fill="x", padx=16, pady=(8, 2))
         self._log = ctk.CTkTextbox(self, height=160, state="disabled")
@@ -87,7 +98,9 @@ class App(ctk.CTk):
         path = filedialog.askdirectory(title="Sync-Ordner wählen")
         if path:
             self._folder_label.configure(text=path)
+            self._sync_dir = Path(path)
             self._on_sync_dir_changed(Path(path))
+            self.refresh_file_list()
 
     def _manual_sync(self):
         self._status_label.configure(text="Status: synchronisiere…")
@@ -119,6 +132,30 @@ class App(ctk.CTk):
         if name in self._peer_rows:
             self._peer_rows[name].destroy()
             del self._peer_rows[name]
+
+    def refresh_file_list(self) -> None:
+        if self._sync_dir is None or not self._sync_dir.exists():
+            return
+        current = {
+            str(f.relative_to(self._sync_dir)).replace('\\', '/')
+            for f in self._sync_dir.rglob('*')
+            if f.is_file()
+        }
+        for rel in list(self._file_rows.keys()):
+            if rel not in current:
+                self._file_rows[rel].destroy()
+                del self._file_rows[rel]
+        for rel in sorted(current):
+            if rel not in self._file_rows:
+                row = ctk.CTkFrame(self._file_frame, fg_color="transparent")
+                row.pack(fill="x", pady=1)
+                ctk.CTkLabel(row, text=rel, anchor="w").pack(side="left", fill="x", expand=True)
+                ctk.CTkButton(row, text="Push", width=60,
+                              command=lambda r=rel: self._push_file(r)).pack(side="right")
+                self._file_rows[rel] = row
+
+    def _push_file(self, rel_path: str) -> None:
+        asyncio.run_coroutine_threadsafe(self._on_push_file(rel_path), self._async_loop)
 
     def log(self, message: str) -> None:
         self._log.configure(state="normal")
@@ -174,6 +211,15 @@ class App(ctk.CTk):
                     self.update_peer(msg["peer"])
                 elif msg["action"] == "remove":
                     self.remove_peer(msg["name"])
+        except queue.Empty:
+            pass
+
+        # Datei-Updates
+        try:
+            while True:
+                msg = self._file_queue.get_nowait()
+                if msg.get("action") == "refresh":
+                    self.refresh_file_list()
         except queue.Empty:
             pass
 

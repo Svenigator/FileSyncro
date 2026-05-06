@@ -22,6 +22,7 @@ def main():
     activity_queue: queue.Queue = queue.Queue()
     delete_queue: queue.Queue = queue.Queue()
     peer_queue: queue.Queue = queue.Queue()
+    file_queue: queue.Queue = queue.Queue()
 
     # asyncio-Loop in Hintergrund-Thread
     async_loop = asyncio.new_event_loop()
@@ -55,6 +56,7 @@ def main():
             rel = str(path.relative_to(sync_dir[0])).replace('\\', '/')
         except ValueError:
             return
+        file_queue.put({"action": "refresh"})
         results = await peer_manager.send_file(rel)
         ok = sum(1 for v in results.values() if v)
         activity_queue.put(f"✓ {path.name} → {ok} Gerät(e)")
@@ -76,6 +78,7 @@ def main():
         if result == "all":
             await peer_manager.delete_file(rel)
             activity_queue.put(f"🗑 {path.name} auf allen Geräten gelöscht")
+        file_queue.put({"action": "refresh"})
 
     file_watcher = FileWatcher(
         sync_dir=sync_dir[0],
@@ -115,6 +118,7 @@ def main():
         file_watcher.stop()
         file_watcher.sync_dir = new_path
         file_watcher.start(async_loop)
+        file_queue.put({"action": "refresh"})
 
     async def manual_sync():
         await peer_manager.sync_with_all()
@@ -141,6 +145,11 @@ def main():
         peer_queue.put({"action": "add", "peer": peer})
         activity_queue.put(f"+ {ip} manuell hinzugefügt")
 
+    async def on_push_file(rel_path: str) -> None:
+        results = await peer_manager.send_file(rel_path)
+        ok = sum(1 for v in results.values() if v)
+        activity_queue.put(f"✓ {rel_path} → {ok} Gerät(e) manuell gesendet")
+
     asyncio.run_coroutine_threadsafe(async_main(), async_loop)
     thread = threading.Thread(target=async_loop.run_forever, daemon=True)
     thread.start()
@@ -151,10 +160,12 @@ def main():
         activity_queue=activity_queue,
         delete_queue=delete_queue,
         peer_queue=peer_queue,
+        file_queue=file_queue,
         on_sync_dir_changed=on_sync_dir_changed,
         on_manual_sync=manual_sync,
         on_add_peer_manual=add_peer_manual,
         on_refresh_peers=refresh_peers,
+        on_push_file=on_push_file,
     )
     app.mainloop()
 
