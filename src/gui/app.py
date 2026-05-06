@@ -51,9 +51,9 @@ class App(ctk.CTk):
         folder_frame = ctk.CTkFrame(self)
         folder_frame.pack(fill="x", padx=16, pady=(16, 4))
         ctk.CTkLabel(folder_frame, text="Sync-Ordner:").pack(side="left", padx=8)
-        self._folder_label = ctk.CTkLabel(folder_frame, text="(nicht gewählt)", anchor="w", width=300)
-        self._folder_label.pack(side="left", padx=4)
-        ctk.CTkButton(folder_frame, text="...", width=40, command=self._choose_folder).pack(side="left", padx=4)
+        ctk.CTkButton(folder_frame, text="...", width=40, command=self._choose_folder).pack(side="right", padx=8)
+        self._folder_label = ctk.CTkLabel(folder_frame, text="(nicht gewählt)", anchor="w")
+        self._folder_label.pack(side="left", fill="x", expand=True, padx=4)
 
         # Geräteliste
         ctk.CTkLabel(self, text="Verbundene Geräte", anchor="w").pack(fill="x", padx=16, pady=(12, 2))

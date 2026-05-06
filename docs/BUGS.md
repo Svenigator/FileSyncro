@@ -8,5 +8,6 @@
 - [ ] [LOW] Log-Datei wächst unbegrenzt — Kein Log-Rotation-Mechanismus vorhanden
 
 ## Fixed
+- [x] [MED] Öffnen-Button verschwindet bei langem Pfad — Button wird jetzt mit `side="right"` vor dem Label gepackt und bleibt dadurch immer am rechten Rand sichtbar. Label füllt den restlichen Platz.
 - [x] [HIGH] Lösch-Dialog erscheint auf allen Geräten — `suppress_delete`-Pattern verhindert, dass watchdog die remoteseitig ausgelöste Löschung als lokales Ereignis behandelt. `SyncServer` ruft `on_before_delete` vor dem Löschen auf, `FileWatcher` unterdrückt das nächste Delete-Event für diesen Pfad.
 - [x] [HIGH] Absturz bei leerem Verzeichnis — NullPointerException wenn Quellverzeichnis leer ist
