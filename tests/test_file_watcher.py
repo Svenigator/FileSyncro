@@ -47,6 +47,58 @@ async def test_detects_deletion(tmp_path):
     assert any(p.name == "video.mp4" for p in deletions)
 
 
+async def test_suppress_delete_skips_callback(tmp_path):
+    deletions = []
+    f = tmp_path / "video.mp4"
+    f.write_bytes(b"data")
+
+    async def on_change(path: Path):
+        pass
+
+    async def on_delete(path: Path):
+        deletions.append(path)
+
+    loop = asyncio.get_event_loop()
+    watcher = FileWatcher(sync_dir=tmp_path, on_change=on_change, on_delete=on_delete)
+    watcher.start(loop)
+
+    watcher.suppress_delete(f)
+    f.unlink()
+    await asyncio.sleep(0.9)
+
+    watcher.stop()
+    assert len(deletions) == 0
+
+
+async def test_suppress_delete_only_skips_once(tmp_path):
+    deletions = []
+    f = tmp_path / "video.mp4"
+    f.write_bytes(b"data")
+
+    async def on_change(path: Path):
+        pass
+
+    async def on_delete(path: Path):
+        deletions.append(path)
+
+    loop = asyncio.get_event_loop()
+    watcher = FileWatcher(sync_dir=tmp_path, on_change=on_change, on_delete=on_delete)
+    watcher.start(loop)
+
+    watcher.suppress_delete(f)
+    f.unlink()
+    await asyncio.sleep(0.9)
+
+    # Datei neu anlegen und wieder löschen — diesmal OHNE suppress → soll feuern
+    f.write_bytes(b"data")
+    await asyncio.sleep(0.1)
+    f.unlink()
+    await asyncio.sleep(0.9)
+
+    watcher.stop()
+    assert len(deletions) == 1
+
+
 async def test_debounce_deduplicates_rapid_writes(tmp_path):
     changes = []
 

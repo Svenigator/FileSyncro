@@ -72,6 +72,24 @@ async def test_get_files_lists_with_timestamps(tmp_path):
         await srv.stop()
 
 
+async def test_delete_calls_on_before_delete(tmp_path):
+    (tmp_path / "file.txt").write_bytes(b"data")
+    suppressed = []
+
+    def on_before_delete(rel_path):
+        suppressed.append(rel_path)
+
+    srv = SyncServer(sync_dir=tmp_path, on_before_delete=on_before_delete)
+    await srv.start()
+    try:
+        async with aiohttp.ClientSession() as s:
+            resp = await s.delete(f"http://localhost:{SyncServer.PORT}/file/file.txt")
+            assert resp.status == 200
+        assert "file.txt" in suppressed
+    finally:
+        await srv.stop()
+
+
 async def test_conflict_calls_on_conflict_and_accepts(tmp_path):
     import queue
     conflict_queue = queue.Queue()

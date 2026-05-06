@@ -45,7 +45,10 @@ def main():
             "future": future,
         })
 
-    sync_server = SyncServer(sync_dir=sync_dir[0], on_conflict=on_conflict)
+    def on_before_delete(rel_path: str):
+        file_watcher.suppress_delete(sync_dir[0] / rel_path)
+
+    sync_server = SyncServer(sync_dir=sync_dir[0], on_conflict=on_conflict, on_before_delete=on_before_delete)
 
     async def on_file_changed(path: Path):
         try:

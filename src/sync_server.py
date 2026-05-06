@@ -8,9 +8,10 @@ from aiohttp import web
 class SyncServer:
     PORT = 5757
 
-    def __init__(self, sync_dir: Path, on_conflict=None):
+    def __init__(self, sync_dir: Path, on_conflict=None, on_before_delete=None):
         self.sync_dir = sync_dir
         self.on_conflict = on_conflict
+        self.on_before_delete = on_before_delete
         self._app = web.Application()
         self._app.router.add_put('/file/{path:.*}', self._handle_put)
         self._app.router.add_delete('/file/{path:.*}', self._handle_delete)
@@ -49,6 +50,8 @@ class SyncServer:
             return web.Response(status=400, text='invalid path')
 
         file_path = self.sync_dir / rel_path
+        if self.on_before_delete:
+            self.on_before_delete(rel_path)
         if file_path.exists():
             file_path.unlink()
         return web.Response(status=200)

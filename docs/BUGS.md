@@ -1,7 +1,6 @@
 # Bugs
 
 ## Open
-- [ ] [HIGH] Lösch-Dialog erscheint auf allen Geräten — Wenn Gerät A eine Datei löscht und "Alle Geräte" wählt, empfangen die anderen Geräte den DELETE-Befehl, watchdog erkennt die Löschung lokal und zeigt den Dialog erneut an. Die Entscheidung sollte nur auf dem auslösenden Gerät getroffen werden.
 - [ ] [HIGH] Sync überschreibt neuere Datei — Beim Sync wird die neuere Zieldatei durch eine ältere Quelldatei überschrieben
 - [ ] [MED] Fehlende Fehlerausgabe — Bei fehlenden Berechtigungen wird kein verständlicher Fehler ausgegeben
 
@@ -9,4 +8,5 @@
 - [ ] [LOW] Log-Datei wächst unbegrenzt — Kein Log-Rotation-Mechanismus vorhanden
 
 ## Fixed
+- [x] [HIGH] Lösch-Dialog erscheint auf allen Geräten — `suppress_delete`-Pattern verhindert, dass watchdog die remoteseitig ausgelöste Löschung als lokales Ereignis behandelt. `SyncServer` ruft `on_before_delete` vor dem Löschen auf, `FileWatcher` unterdrückt das nächste Delete-Event für diesen Pfad.
 - [x] [HIGH] Absturz bei leerem Verzeichnis — NullPointerException wenn Quellverzeichnis leer ist

@@ -6,10 +6,11 @@ from watchdog.events import FileSystemEventHandler
 
 
 class _DebounceHandler(FileSystemEventHandler):
-    def __init__(self, loop: asyncio.AbstractEventLoop, on_change, on_delete, debounce: float = 0.5):
+    def __init__(self, loop: asyncio.AbstractEventLoop, on_change, on_delete, suppressed: set, debounce: float = 0.5):
         self._loop = loop
         self._on_change = on_change
         self._on_delete = on_delete
+        self._suppressed = suppressed
         self._debounce = debounce
         self._handles: dict[str, asyncio.TimerHandle] = {}
 
@@ -35,6 +36,9 @@ class _DebounceHandler(FileSystemEventHandler):
     def on_deleted(self, event):
         if not event.is_directory:
             path = Path(event.src_path)
+            if path in self._suppressed:
+                self._suppressed.discard(path)
+                return
             self._schedule(event.src_path, lambda p=path: self._on_delete(p))
 
 
@@ -43,10 +47,14 @@ class FileWatcher:
         self.sync_dir = sync_dir
         self._on_change = on_change
         self._on_delete = on_delete
+        self._suppressed: set[Path] = set()
         self._observer: Observer | None = None
 
+    def suppress_delete(self, path: Path) -> None:
+        self._suppressed.add(path)
+
     def start(self, loop: asyncio.AbstractEventLoop) -> None:
-        handler = _DebounceHandler(loop, self._on_change, self._on_delete)
+        handler = _DebounceHandler(loop, self._on_change, self._on_delete, self._suppressed)
         self._observer = Observer()
         self._observer.schedule(handler, str(self.sync_dir), recursive=True)
         self._observer.start()
