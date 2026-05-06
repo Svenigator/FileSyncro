@@ -161,14 +161,66 @@ async def test_ping_fires_callback_on_status_change(tmp_path):
     assert callbacks[0] is False  # callback received peer with reachable=False
 
 
-async def test_send_file_respects_active_filter(tmp_path):
+async def test_ping_fetches_peer_info_on_success(tmp_path):
+    pm = PeerManager(sync_dir=tmp_path)
+    peer = Peer(name="mac", ip="192.168.1.5", port=5757)
+    pm.add_peer(peer)
+
+    files_resp = AsyncMock()
+    files_resp.status = 200
+    files_cm = MagicMock()
+    files_cm.__aenter__ = AsyncMock(return_value=files_resp)
+    files_cm.__aexit__ = AsyncMock(return_value=False)
+
+    info_resp = AsyncMock()
+    info_resp.status = 200
+    info_resp.json = AsyncMock(return_value={"group": "Bühne", "groups": ["Bühne", "Technik"]})
+    info_cm = MagicMock()
+    info_cm.__aenter__ = AsyncMock(return_value=info_resp)
+    info_cm.__aexit__ = AsyncMock(return_value=False)
+
+    call_count = 0
+
+    def side_effect(url, **kwargs):
+        nonlocal call_count
+        call_count += 1
+        return files_cm if "/files" in url else info_cm
+
+    with patch("aiohttp.ClientSession.get", side_effect=side_effect):
+        result = await pm.ping(peer)
+
+    assert result is True
+    assert peer.group == "Bühne"
+    assert peer.known_groups == ["Bühne", "Technik"]
+
+
+def test_set_my_group_filters_active_peers(tmp_path):
+    pm = PeerManager(sync_dir=tmp_path)
+    peer_a = Peer(name="buehne-pc", ip="192.168.1.1", port=5757, group="Bühne")
+    peer_b = Peer(name="technik-pc", ip="192.168.1.2", port=5757, group="Technik")
+    pm.add_peer(peer_a)
+    pm.add_peer(peer_b)
+    pm.set_my_group("Bühne")
+    assert peer_a in pm.active_peers
+    assert peer_b not in pm.active_peers
+
+
+def test_my_group_none_includes_all_peers(tmp_path):
+    pm = PeerManager(sync_dir=tmp_path)
+    pm.add_peer(Peer(name="a", ip="192.168.1.1", port=5757, group="Bühne"))
+    pm.add_peer(Peer(name="b", ip="192.168.1.2", port=5757, group="Technik"))
+    pm.set_my_group(None)
+    assert len(pm.active_peers) == 2
+
+
+async def test_send_file_respects_my_group(tmp_path):
     f = tmp_path / "slide.pptx"
     f.write_bytes(b"data")
 
     pm = PeerManager(sync_dir=tmp_path)
-    pm.add_peer(Peer(name="in-group", ip="192.168.1.1", port=5757))
-    pm.add_peer(Peer(name="out-group", ip="192.168.1.2", port=5757))
-    pm.set_active_filter(["in-group"])
+    pm.add_peer(Peer(name="in-group", ip="192.168.1.1", port=5757, group="Bühne"))
+    pm.add_peer(Peer(name="out-group", ip="192.168.1.2", port=5757, group="Technik"))
+    pm.set_my_group("Bühne")
 
     mock_resp = AsyncMock()
     mock_resp.status = 200
@@ -181,15 +233,3 @@ async def test_send_file_respects_active_filter(tmp_path):
 
     assert "in-group" in results
     assert "out-group" not in results
-
-
-def test_active_filter_none_restores_all_peers(tmp_path):
-    pm = PeerManager(sync_dir=tmp_path)
-    pm.add_peer(Peer(name="peer-a", ip="192.168.1.1", port=5757))
-    pm.add_peer(Peer(name="peer-b", ip="192.168.1.2", port=5757))
-
-    pm.set_active_filter(["peer-a"])
-    assert len(pm.active_peers) == 1
-
-    pm.set_active_filter(None)
-    assert len(pm.active_peers) == 2

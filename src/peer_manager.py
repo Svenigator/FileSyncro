@@ -1,7 +1,7 @@
 # src/peer_manager.py
 import asyncio
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable, Optional
 import aiohttp
@@ -14,6 +14,8 @@ class Peer:
     port: int = 5757
     reachable: bool = True
     consecutive_failures: int = 0
+    group: str | None = None
+    known_groups: list[str] = field(default_factory=list)
 
 
 class PeerManager:
@@ -21,7 +23,7 @@ class PeerManager:
         self.sync_dir = sync_dir
         self.on_peer_status_changed = on_peer_status_changed
         self._peers: dict[str, Peer] = {}
-        self._active_filter: list[str] | None = None
+        self._my_group: str | None = None
 
     @property
     def peers(self) -> list[Peer]:
@@ -33,14 +35,14 @@ class PeerManager:
     def remove_peer(self, name: str) -> None:
         self._peers.pop(name, None)
 
-    def set_active_filter(self, names: list[str] | None) -> None:
-        self._active_filter = names
+    def set_my_group(self, name: str | None) -> None:
+        self._my_group = name
 
     @property
     def active_peers(self) -> list[Peer]:
-        if self._active_filter is None:
+        if self._my_group is None:
             return self.peers
-        return [p for p in self.peers if p.name in self._active_filter]
+        return [p for p in self.peers if p.group == self._my_group]
 
     def _url(self, peer: Peer, path: str) -> str:
         return f"http://{peer.ip}:{peer.port}{path}"
@@ -49,6 +51,19 @@ class PeerManager:
         peer.reachable = False
         if self.on_peer_status_changed:
             self.on_peer_status_changed(peer)
+
+    async def _fetch_peer_info(self, peer: Peer, session: aiohttp.ClientSession) -> None:
+        try:
+            async with session.get(
+                self._url(peer, "/info"),
+                timeout=aiohttp.ClientTimeout(total=3),
+            ) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    peer.group = data.get("group")
+                    peer.known_groups = data.get("groups", [])
+        except Exception:
+            pass
 
     async def send_file(self, rel_path: str) -> dict[str, bool]:
         file_path = self.sync_dir / rel_path
@@ -115,6 +130,8 @@ class PeerManager:
                         peer.reachable = reachable
                         if self.on_peer_status_changed:
                             self.on_peer_status_changed(peer)
+                    if reachable:
+                        await self._fetch_peer_info(peer, session)
                     return reachable
             except Exception:
                 if peer.reachable:
