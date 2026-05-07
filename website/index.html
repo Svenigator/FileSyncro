@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="FileSyncro – Automatische Peer-to-Peer-Datei­synchronisation für Veranstaltungen. Keine USB-Sticks, kein Server, kein Aufwand." />
+  <meta name="theme-color" content="#1d4ed8" />
+  <title>FileSyncro – P2P-Dateisynchronisation für Veranstaltungen</title>
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="FileSyncro" />
+  <meta property="og:description" content="Präsentationen & Videos automatisch auf alle Laptops verteilen – ohne USB-Sticks und ohne Server." />
+  <meta property="og:type" content="website" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- ─── Navigation ─────────────────────────────────────────── -->
+  <nav class="nav" id="nav">
+    <div class="nav__inner">
+      <a href="#" class="nav__logo">
+        <span class="nav__logo-icon">⟳</span>
+        FileSyncro
+      </a>
+      <ul class="nav__links">
+        <li><a href="#features">Features</a></li>
+        <li><a href="#how-it-works">So funktioniert's</a></li>
+        <li><a href="#download">Download</a></li>
+        <li><a href="#developers">Entwickler</a></li>
+      </ul>
+      <div class="nav__actions">
+        <a href="https://github.com/Svenigator/FileSyncro" target="_blank" rel="noopener" class="btn btn--ghost btn--sm">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+          GitHub
+        </a>
+        <a href="#download" class="btn btn--primary btn--sm">Download</a>
+      </div>
+      <button class="nav__burger" id="navBurger" aria-label="Menü öffnen">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ─── Hero ───────────────────────────────────────────────── -->
+  <section class="hero">
+    <div class="hero__bg-grid" aria-hidden="true"></div>
+    <div class="hero__glow hero__glow--1" aria-hidden="true"></div>
+    <div class="hero__glow hero__glow--2" aria-hidden="true"></div>
+    <div class="container">
+      <div class="hero__badge">
+        <span class="badge badge--blue">Open Source · Kostenlos · P2P</span>
+      </div>
+      <h1 class="hero__title">
+        Dateien synchron.<br />
+        <span class="gradient-text">Sofort. Überall.</span>
+      </h1>
+      <p class="hero__subtitle">
+        FileSyncro verteilt Präsentationen und Videos automatisch auf alle Laptops im lokalen Netzwerk –
+        ohne USB-Sticks, ohne zentralen Server, ohne Konfiguration.
+      </p>
+      <div class="hero__actions">
+        <a href="#download" class="btn btn--primary btn--lg">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Jetzt herunterladen
+        </a>
+        <a href="#how-it-works" class="btn btn--outline btn--lg">
+          Wie funktioniert's?
+        </a>
+      </div>
+      <div class="hero__stats">
+        <div class="hero__stat">
+          <span class="hero__stat-value">0</span>
+          <span class="hero__stat-label">Konfiguration nötig</span>
+        </div>
+        <div class="hero__stat-divider"></div>
+        <div class="hero__stat">
+          <span class="hero__stat-value">P2P</span>
+          <span class="hero__stat-label">Kein Server</span>
+        </div>
+        <div class="hero__stat-divider"></div>
+        <div class="hero__stat">
+          <span class="hero__stat-value">2</span>
+          <span class="hero__stat-label">Plattformen</span>
+        </div>
+        <div class="hero__stat-divider"></div>
+        <div class="hero__stat">
+          <span class="hero__stat-value">100%</span>
+          <span class="hero__stat-label">Open Source</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── App Preview ────────────────────────────────────────── -->
+  <section class="preview">
+    <div class="container">
+      <div class="preview__window">
+        <div class="preview__titlebar">
+          <span class="preview__dot preview__dot--red"></span>
+          <span class="preview__dot preview__dot--yellow"></span>
+          <span class="preview__dot preview__dot--green"></span>
+          <span class="preview__title-text">FileSyncro</span>
+        </div>
+        <div class="preview__body">
+          <div class="preview__sidebar">
+            <div class="preview__section-label">Sync-Ordner</div>
+            <div class="preview__folder-row">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+              <span>~/FileSyncro</span>
+            </div>
+            <div class="preview__section-label" style="margin-top:16px">Geräte</div>
+            <div class="preview__device preview__device--online">
+              <span class="preview__status-dot preview__status-dot--green"></span>
+              <div>
+                <div class="preview__device-name">MacBook Pro (Büro)</div>
+                <div class="preview__device-ip">192.168.1.12</div>
+              </div>
+            </div>
+            <div class="preview__device preview__device--online">
+              <span class="preview__status-dot preview__status-dot--green"></span>
+              <div>
+                <div class="preview__device-name">Windows-PC</div>
+                <div class="preview__device-ip">192.168.1.45</div>
+              </div>
+            </div>
+            <div class="preview__device">
+              <span class="preview__status-dot preview__status-dot--red"></span>
+              <div>
+                <div class="preview__device-name">Laptop Technik</div>
+                <div class="preview__device-ip">192.168.1.88</div>
+              </div>
+            </div>
+          </div>
+          <div class="preview__log">
+            <div class="preview__section-label">Aktivität</div>
+            <div class="preview__log-entries">
+              <div class="preview__log-entry preview__log-entry--success">
+                <span class="preview__log-time">14:32:01</span>
+                <span>✓ vortrag_final.pptx → MacBook Pro</span>
+              </div>
+              <div class="preview__log-entry preview__log-entry--success">
+                <span class="preview__log-time">14:32:01</span>
+                <span>✓ vortrag_final.pptx → Windows-PC</span>
+              </div>
+              <div class="preview__log-entry">
+                <span class="preview__log-time">14:31:55</span>
+                <span>⟳ Dateiänderung erkannt: vortrag_final.pptx</span>
+              </div>
+              <div class="preview__log-entry preview__log-entry--success">
+                <span class="preview__log-time">14:28:10</span>
+                <span>✓ intro_video.mp4 → MacBook Pro</span>
+              </div>
+              <div class="preview__log-entry">
+                <span class="preview__log-time">14:27:44</span>
+                <span>● Windows-PC verbunden (192.168.1.45)</span>
+              </div>
+              <div class="preview__log-entry">
+                <span class="preview__log-time">14:27:12</span>
+                <span>● MacBook Pro verbunden (192.168.1.12)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── Problem / Solution ─────────────────────────────────── -->
+  <section class="problem">
+    <div class="container">
+      <div class="problem__grid">
+        <div class="problem__col problem__col--before reveal">
+          <div class="problem__label">Ohne FileSyncro</div>
+          <ul class="problem__list problem__list--bad">
+            <li>
+              <span class="problem__icon problem__icon--bad">✕</span>
+              USB-Stick von Laptop zu Laptop tragen
+            </li>
+            <li>
+              <span class="problem__icon problem__icon--bad">✕</span>
+              Letzte Dateiversion vergessen zu kopieren
+            </li>
+            <li>
+              <span class="problem__icon problem__icon--bad">✕</span>
+              Zeitaufwand kurz vor Veranstaltungsbeginn
+            </li>
+            <li>
+              <span class="problem__icon problem__icon--bad">✕</span>
+              Unterschiedliche Versionen auf verschiedenen Geräten
+            </li>
+            <li>
+              <span class="problem__icon problem__icon--bad">✕</span>
+              Keine Rückmeldung, ob alle Geräte up-to-date sind
+            </li>
+          </ul>
+        </div>
+        <div class="problem__divider" aria-hidden="true">
+          <div class="problem__arrow">→</div>
+        </div>
+        <div class="problem__col problem__col--after reveal">
+          <div class="problem__label problem__label--good">Mit FileSyncro</div>
+          <ul class="problem__list problem__list--good">
+            <li>
+              <span class="problem__icon problem__icon--good">✓</span>
+              Datei einmal speichern – alle Geräte aktualisiert
+            </li>
+            <li>
+              <span class="problem__icon problem__icon--good">✓</span>
+              Automatische Verteilung im Hintergrund
+            </li>
+            <li>
+              <span class="problem__icon problem__icon--good">✓</span>
+              Live-Status aller verbundenen Geräte
+            </li>
+            <li>
+              <span class="problem__icon problem__icon--good">✓</span>
+              Konflikt-Erkennung bei gleichzeitigen Änderungen
+            </li>
+            <li>
+              <span class="problem__icon problem__icon--good">✓</span>
+              Keine Installation nötig – einfach starten
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── Features ──────────────────────────────────────────── -->
+  <section class="features" id="features">
+    <div class="container">
+      <div class="section-header reveal">
+        <span class="section-tag">Features</span>
+        <h2 class="section-title">Alles, was du für die Veranstaltung brauchst</h2>
+        <p class="section-subtitle">FileSyncro ist speziell für den Einsatz auf Events entwickelt – einfach, zuverlässig und ohne Overhead.</p>
+      </div>
+      <div class="features__grid">
+
+        <div class="feature-card reveal">
+          <div class="feature-card__icon feature-card__icon--blue">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+          </div>
+          <h3 class="feature-card__title">Automatische Erkennung</h3>
+          <p class="feature-card__text">Alle FileSyncro-Instanzen im lokalen Netzwerk werden via mDNS automatisch gefunden – kein manuelles Eintragen von IP-Adressen notwendig.</p>
+        </div>
+
+        <div class="feature-card reveal">
+          <div class="feature-card__icon feature-card__icon--indigo">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+          </div>
+          <h3 class="feature-card__title">Echtzeit-Synchronisation</h3>
+          <p class="feature-card__text">Sobald eine Datei im Sync-Ordner gespeichert wird, erhalten alle verbundenen Geräte die Aktualisierung innerhalb von Sekunden.</p>
+        </div>
+
+        <div class="feature-card reveal">
+          <div class="feature-card__icon feature-card__icon--violet">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          </div>
+          <h3 class="feature-card__title">Konflikt-Erkennung</h3>
+          <p class="feature-card__text">Werden dieselbe Datei gleichzeitig auf mehreren Geräten bearbeitet, erkennt FileSyncro den Konflikt und lässt dich entscheiden, welche Version gilt.</p>
+        </div>
+
+        <div class="feature-card reveal">
+          <div class="feature-card__icon feature-card__icon--cyan">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          </div>
+          <h3 class="feature-card__title">Gruppen-Management</h3>
+          <p class="feature-card__text">Geräte in Gruppen einteilen und nur innerhalb der aktiven Gruppe synchronisieren – ideal für mehrstufige Veranstaltungsstrukturen.</p>
+        </div>
+
+        <div class="feature-card reveal">
+          <div class="feature-card__icon feature-card__icon--green">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          </div>
+          <h3 class="feature-card__title">Live-Status</h3>
+          <p class="feature-card__text">Die Geräteliste zeigt jederzeit, welche Laptops erreichbar sind (grün) und welche offline sind (rot). Automatische Health-Checks alle 30 Sekunden.</p>
+        </div>
+
+        <div class="feature-card reveal">
+          <div class="feature-card__icon feature-card__icon--orange">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+          </div>
+          <h3 class="feature-card__title">Kein Server nötig</h3>
+          <p class="feature-card__text">Echtes Peer-to-Peer – jedes Gerät kommuniziert direkt mit den anderen. Kein Cloud-Dienst, kein Router-Setup, keine monatlichen Kosten.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── How it works ──────────────────────────────────────── -->
+  <section class="how" id="how-it-works">
+    <div class="container">
+      <div class="section-header reveal">
+        <span class="section-tag">So funktioniert's</span>
+        <h2 class="section-title">In drei Schritten zur synchronisierten Veranstaltung</h2>
+      </div>
+      <div class="how__steps">
+
+        <div class="how__step reveal">
+          <div class="how__step-number">01</div>
+          <div class="how__step-content">
+            <h3>FileSyncro starten</h3>
+            <p>Starte FileSyncro auf allen Geräten im selben lokalen Netzwerk (WLAN oder LAN). Kein Konto, keine Registrierung, keine Konfiguration.</p>
+          </div>
+          <div class="how__step-visual">
+            <div class="how__step-box">
+              <div class="how__step-icon">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+              </div>
+              <div class="how__step-devices">
+                <span class="how__device-chip">Laptop A</span>
+                <span class="how__device-chip">Laptop B</span>
+                <span class="how__device-chip">PC C</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="how__connector" aria-hidden="true"></div>
+
+        <div class="how__step how__step--reverse reveal">
+          <div class="how__step-number">02</div>
+          <div class="how__step-content">
+            <h3>Geräte verbinden sich automatisch</h3>
+            <p>Via mDNS erkennt jedes Gerät die anderen automatisch. Alle FileSyncro-Instanzen erscheinen in der Geräteliste mit grünem Status-Indikator.</p>
+          </div>
+          <div class="how__step-visual">
+            <div class="how__step-box">
+              <div class="how__peer-grid">
+                <div class="how__peer">
+                  <span class="preview__status-dot preview__status-dot--green"></span> Laptop A
+                </div>
+                <div class="how__peer-arrow">⟷</div>
+                <div class="how__peer">
+                  <span class="preview__status-dot preview__status-dot--green"></span> Laptop B
+                </div>
+                <div class="how__peer-arrow how__peer-arrow--vertical">⟷</div>
+                <div class="how__peer">
+                  <span class="preview__status-dot preview__status-dot--green"></span> PC C
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="how__connector" aria-hidden="true"></div>
+
+        <div class="how__step reveal">
+          <div class="how__step-number">03</div>
+          <div class="how__step-content">
+            <h3>Datei speichern – fertig</h3>
+            <p>Lege eine Datei in den Sync-Ordner. FileSyncro überträgt sie sofort auf alle verbundenen Geräte. Das Aktivitätslog zeigt den Übertragungsstatus in Echtzeit.</p>
+          </div>
+          <div class="how__step-visual">
+            <div class="how__step-box">
+              <div class="how__transfer">
+                <span class="how__file-chip">📄 vortrag.pptx</span>
+                <div class="how__transfer-bar">
+                  <div class="how__transfer-fill"></div>
+                </div>
+                <span class="how__transfer-status">✓ Alle Geräte aktuell</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── Download ──────────────────────────────────────────── -->
+  <section class="download" id="download">
+    <div class="container">
+      <div class="section-header reveal">
+        <span class="section-tag section-tag--light">Download</span>
+        <h2 class="section-title section-title--light">Bereit für deinen nächsten Event</h2>
+        <p class="section-subtitle section-subtitle--light">Kostenlos, keine Installation notwendig – einfach herunterladen und starten.</p>
+      </div>
+      <div class="download__cards">
+
+        <div class="download__card reveal">
+          <div class="download__os-icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M0 12.402c0 6.275 4.501 11.497 10.386 12.453L12 12.402l-1.614-12.455C4.501.903 0 6.127 0 12.402zm14.052-9.8L12 12.402l2.052 9.8c5.884-.956 9.948-6.178 9.948-12.453 0-6.275-4.064-11.499-9.948-12.147z"/></svg>
+          </div>
+          <h3>Windows</h3>
+          <p>Standalone-Exe, keine Installation nötig. Einfach herunterladen und starten.</p>
+          <div class="download__meta">
+            <span>Windows 10 / 11</span>
+            <span>64-bit</span>
+          </div>
+          <a href="https://github.com/Svenigator/FileSyncro/releases/latest" target="_blank" rel="noopener" class="btn btn--download">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            FileSyncro.exe
+          </a>
+        </div>
+
+        <div class="download__card download__card--featured reveal">
+          <div class="download__badge">Empfohlen</div>
+          <div class="download__os-icon">
+            <svg width="48" height="48" viewBox="0 0 814 1000" fill="currentColor" aria-hidden="true"><path d="M788.1 340.9c-5.8 4.5-108.2 62.2-108.2 190.5 0 148.4 130.3 200.9 134.2 202.2-.6 3.2-20.7 71.9-68.7 141.9-42.8 61.6-87.5 123.1-155.5 123.1s-85.5-39.5-164-39.5c-76 0-103.7 40.8-165.9 40.8s-105-57.8-155.5-127.4C46 376.7 0 248.7 0 126.8 0 56.7 24.2 9.1 72.3 9.1c19.8 0 41.6 7.1 58.4 14.3 35.7 15.3 53.5 26.8 79.2 26.8 24.3 0 40.8-7.1 76.5-22.4 35.1-14.9 62.7-21.9 89.9-21.9 130.3 0 213.2 88.7 213.2 233.9 0 39.5-8.1 78.4-24.3 114.2z"/></svg>
+          </div>
+          <h3>macOS</h3>
+          <p>Native .app-Bundle als DMG. Erster Start: Rechtsklick → „Öffnen" (Sicherheitsabfrage).</p>
+          <div class="download__meta">
+            <span>macOS 12+</span>
+            <span>Apple Silicon &amp; Intel</span>
+          </div>
+          <a href="https://github.com/Svenigator/FileSyncro/releases/latest" target="_blank" rel="noopener" class="btn btn--download">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            FileSyncro.dmg
+          </a>
+        </div>
+
+        <div class="download__card reveal">
+          <div class="download__os-icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.581 19.049l-1.975-1.975A9.9 9.9 0 0 0 20 12c0-5.523-4.477-10-10-10S0 6.477 0 12s4.477 10 10 10a9.9 9.9 0 0 0 5.074-1.394l1.975 1.975 3.532-3.532zM2 12C2 7.589 5.589 4 10 4s8 3.589 8 8-3.589 8-8 8-8-3.589-8-8z"/></svg>
+          </div>
+          <h3>Linux / Quellcode</h3>
+          <p>Python 3.11+ erforderlich. Geeignet für Entwickler und fortgeschrittene Nutzer.</p>
+          <div class="download__meta">
+            <span>Python 3.11+</span>
+            <span>pip install</span>
+          </div>
+          <a href="https://github.com/Svenigator/FileSyncro" target="_blank" rel="noopener" class="btn btn--download">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+            Auf GitHub
+          </a>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── Developers ─────────────────────────────────────────── -->
+  <section class="developers" id="developers">
+    <div class="container">
+      <div class="section-header reveal">
+        <span class="section-tag">Für Entwickler</span>
+        <h2 class="section-title">Schnellstart in 3 Befehlen</h2>
+      </div>
+      <div class="developers__grid">
+        <div class="developers__code reveal">
+          <div class="code-block">
+            <div class="code-block__header">
+              <span class="code-block__lang">bash</span>
+              <button class="code-block__copy" data-code="git clone https://github.com/Svenigator/FileSyncro.git
+cd FileSyncro
+pip install -r requirements.txt
+python -m src.main" aria-label="Code kopieren">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                Kopieren
+              </button>
+            </div>
+            <pre><code><span class="code-comment"># Repository klonen</span>
+<span class="code-cmd">git</span> clone https://github.com/Svenigator/FileSyncro.git
+<span class="code-cmd">cd</span> FileSyncro
+
+<span class="code-comment"># Abhängigkeiten installieren</span>
+<span class="code-cmd">pip</span> install -r requirements.txt
+
+<span class="code-comment"># Anwendung starten</span>
+<span class="code-cmd">python</span> -m src.main</code></pre>
+          </div>
+          <div class="code-block" style="margin-top: 16px;">
+            <div class="code-block__header">
+              <span class="code-block__lang">bash – Tests ausführen</span>
+              <button class="code-block__copy" data-code="pip install -r requirements-dev.txt
+pytest -v" aria-label="Code kopieren">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                Kopieren
+              </button>
+            </div>
+            <pre><code><span class="code-cmd">pip</span> install -r requirements-dev.txt
+<span class="code-cmd">pytest</span> -v</code></pre>
+          </div>
+        </div>
+        <div class="developers__info reveal">
+          <h3>Tech-Stack</h3>
+          <div class="tech-stack">
+            <div class="tech-item">
+              <span class="tech-item__icon">🐍</span>
+              <div>
+                <div class="tech-item__name">Python 3.11</div>
+                <div class="tech-item__desc">Sprache &amp; Laufzeitumgebung</div>
+              </div>
+            </div>
+            <div class="tech-item">
+              <span class="tech-item__icon">🖥</span>
+              <div>
+                <div class="tech-item__name">customtkinter</div>
+                <div class="tech-item__desc">Modernes GUI-Framework</div>
+              </div>
+            </div>
+            <div class="tech-item">
+              <span class="tech-item__icon">⚡</span>
+              <div>
+                <div class="tech-item__name">aiohttp</div>
+                <div class="tech-item__desc">Async HTTP-Server &amp; -Client</div>
+              </div>
+            </div>
+            <div class="tech-item">
+              <span class="tech-item__icon">🔍</span>
+              <div>
+                <div class="tech-item__name">zeroconf</div>
+                <div class="tech-item__desc">mDNS-Peer-Discovery</div>
+              </div>
+            </div>
+            <div class="tech-item">
+              <span class="tech-item__icon">👁</span>
+              <div>
+                <div class="tech-item__name">watchdog</div>
+                <div class="tech-item__desc">Dateisystem-Monitoring</div>
+              </div>
+            </div>
+          </div>
+          <a href="https://github.com/Svenigator/FileSyncro" target="_blank" rel="noopener" class="btn btn--primary" style="margin-top: 28px; display: inline-flex;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+            Repository auf GitHub
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── Footer ─────────────────────────────────────────────── -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer__grid">
+        <div class="footer__brand">
+          <a href="#" class="nav__logo">
+            <span class="nav__logo-icon">⟳</span>
+            FileSyncro
+          </a>
+          <p>Peer-to-Peer Datei&shy;synchronisation für Veranstaltungen. Kostenlos &amp; Open Source.</p>
+          <a href="https://github.com/Svenigator/FileSyncro" target="_blank" rel="noopener" class="footer__github-link">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+            Svenigator/FileSyncro
+          </a>
+        </div>
+        <div class="footer__col">
+          <h4>Produkt</h4>
+          <ul>
+            <li><a href="#features">Features</a></li>
+            <li><a href="#how-it-works">So funktioniert's</a></li>
+            <li><a href="#download">Download</a></li>
+          </ul>
+        </div>
+        <div class="footer__col">
+          <h4>Entwicklung</h4>
+          <ul>
+            <li><a href="https://github.com/Svenigator/FileSyncro" target="_blank" rel="noopener">Source Code</a></li>
+            <li><a href="https://github.com/Svenigator/FileSyncro/issues" target="_blank" rel="noopener">Issues melden</a></li>
+            <li><a href="https://github.com/Svenigator/FileSyncro/releases" target="_blank" rel="noopener">Releases</a></li>
+            <li><a href="#developers">Quick Start</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer__bottom">
+        <span>© 2025 FileSyncro · Open Source Project</span>
+        <span>Made with ♥ for event organizers</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
