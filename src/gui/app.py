@@ -137,11 +137,16 @@ class App(ctk.CTk):
             dot = ctk.CTkLabel(row, text="●", width=20)
             dot.pack(side="left")
             ctk.CTkLabel(row, text=peer.name).pack(side="left", padx=4)
-            ctk.CTkLabel(row, text=peer.ip, text_color="gray").pack(side="left")
+            ctk.CTkLabel(row, text=peer.ip, text_color="gray").pack(side="left", padx=(0, 8))
+            group_label = ctk.CTkLabel(row, text="—", text_color="gray", width=100, anchor="e")
+            group_label.pack(side="right", padx=8)
             self._peer_rows[peer.name] = row
             row._dot = dot
-        dot = self._peer_rows[peer.name]._dot
-        dot.configure(text_color="green" if peer.reachable else "red")
+            row._group_label = group_label
+            row._peer = peer
+        row = self._peer_rows[peer.name]
+        row._dot.configure(text_color="green" if peer.reachable else "red")
+        row._group_label.configure(text=peer.group or "—")
 
     def remove_peer(self, name: str) -> None:
         if name in self._peer_rows:
@@ -218,6 +223,11 @@ class App(ctk.CTk):
                     self.remove_peer(msg["name"])
         except queue.Empty:
             pass
+
+        # Gruppen-Spalte in Geräteliste aktuell halten (Peer.group wird async befüllt)
+        for row in self._peer_rows.values():
+            row._group_label.configure(text=row._peer.group or "—")
+            row._dot.configure(text_color="green" if row._peer.reachable else "red")
 
         # Gruppen-Combobox aktuell halten
         current_names = ["Alle Geräte"] + [g.name for g in self._group_manager.groups]

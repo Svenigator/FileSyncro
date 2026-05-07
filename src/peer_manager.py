@@ -6,6 +6,8 @@ from pathlib import Path
 from typing import Callable, Optional
 import aiohttp
 
+_ProgressCallback = Callable[[str], None]
+
 
 @dataclass
 class Peer:
@@ -152,7 +154,7 @@ class PeerManager:
                     removed.append(name)
         return removed
 
-    async def sync_with_all(self) -> None:
+    async def sync_with_all(self, on_progress: Optional[_ProgressCallback] = None) -> None:
         if not self.sync_dir.exists():
             return
         local_files: dict[str, float] = {}
@@ -167,16 +169,22 @@ class PeerManager:
             for rel_path, local_ts in local_files.items():
                 remote_ts = remote_files.get(rel_path)
                 if remote_ts is None or local_ts > remote_ts + 1.0:
-                    await self._push_to_peer(peer, rel_path)
+                    ok = await self._push_to_peer(peer, rel_path)
+                    if on_progress:
+                        status = "✓" if ok else "✗"
+                        on_progress(f"{status} {rel_path} → {peer.name}")
+                else:
+                    if on_progress:
+                        on_progress(f"⊘ {rel_path} bereits aktuell auf {peer.name}")
 
-    async def _push_to_peer(self, peer: Peer, rel_path: str) -> None:
+    async def _push_to_peer(self, peer: Peer, rel_path: str) -> bool:
         file_path = self.sync_dir / rel_path
         if not file_path.exists():
-            return
-        data = file_path.read_bytes()
-        ts = file_path.stat().st_mtime
+            return False
         async with aiohttp.ClientSession() as session:
             try:
+                data = file_path.read_bytes()
+                ts = file_path.stat().st_mtime
                 async with session.put(
                     self._url(peer, f"/file/{rel_path}"),
                     data=data,
@@ -184,5 +192,7 @@ class PeerManager:
                     timeout=aiohttp.ClientTimeout(total=30)
                 ) as resp:
                     peer.reachable = True
+                    return True
             except Exception:
                 self._mark_unreachable(peer)
+                return False

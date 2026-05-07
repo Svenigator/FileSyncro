@@ -213,6 +213,70 @@ def test_my_group_none_includes_all_peers(tmp_path):
     assert len(pm.active_peers) == 2
 
 
+async def test_sync_with_all_logs_skipped_files(tmp_path):
+    f = tmp_path / "photo.jpg"
+    f.write_bytes(b"img")
+    local_ts = f.stat().st_mtime
+
+    pm = PeerManager(sync_dir=tmp_path)
+    pm.add_peer(Peer(name="mac", ip="192.168.1.5", port=5757, group=None))
+
+    mock_resp = AsyncMock()
+    mock_resp.status = 200
+    mock_resp.json = AsyncMock(return_value={"photo.jpg": local_ts})
+    mock_cm = MagicMock()
+    mock_cm.__aenter__ = AsyncMock(return_value=mock_resp)
+    mock_cm.__aexit__ = AsyncMock(return_value=False)
+
+    progress_log: list[str] = []
+    with patch("aiohttp.ClientSession.get", return_value=mock_cm):
+        await pm.sync_with_all(on_progress=progress_log.append)
+
+    assert any("photo.jpg" in msg and "bereits aktuell" in msg for msg in progress_log)
+
+
+async def test_sync_with_all_logs_pushed_files(tmp_path):
+    f = tmp_path / "new.txt"
+    f.write_bytes(b"hello")
+
+    pm = PeerManager(sync_dir=tmp_path)
+    pm.add_peer(Peer(name="mac", ip="192.168.1.5", port=5757, group=None))
+
+    get_resp = AsyncMock()
+    get_resp.status = 200
+    get_resp.json = AsyncMock(return_value={})
+    get_cm = MagicMock()
+    get_cm.__aenter__ = AsyncMock(return_value=get_resp)
+    get_cm.__aexit__ = AsyncMock(return_value=False)
+
+    put_resp = AsyncMock()
+    put_resp.status = 200
+    put_cm = MagicMock()
+    put_cm.__aenter__ = AsyncMock(return_value=put_resp)
+    put_cm.__aexit__ = AsyncMock(return_value=False)
+
+    progress_log: list[str] = []
+    with patch("aiohttp.ClientSession.get", return_value=get_cm), \
+         patch("aiohttp.ClientSession.put", return_value=put_cm):
+        await pm.sync_with_all(on_progress=progress_log.append)
+
+    assert any("new.txt" in msg and "✓" in msg for msg in progress_log)
+
+
+async def test_push_to_peer_returns_false_on_read_error(tmp_path):
+    f = tmp_path / "locked.bin"
+    f.write_bytes(b"data")
+
+    pm = PeerManager(sync_dir=tmp_path)
+    peer = Peer(name="mac", ip="192.168.1.5", port=5757)
+    pm.add_peer(peer)
+
+    with patch("pathlib.Path.read_bytes", side_effect=PermissionError("access denied")):
+        result = await pm._push_to_peer(peer, "locked.bin")
+
+    assert result is False
+
+
 async def test_send_file_respects_my_group(tmp_path):
     f = tmp_path / "slide.pptx"
     f.write_bytes(b"data")

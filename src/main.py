@@ -126,7 +126,7 @@ def main():
         file_watcher.start(async_loop)
 
     async def manual_sync():
-        await peer_manager.sync_with_all()
+        await peer_manager.sync_with_all(on_progress=activity_queue.put)
         activity_queue.put("✓ Manueller Sync abgeschlossen")
 
     async def periodic_ping():
