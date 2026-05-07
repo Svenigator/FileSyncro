@@ -56,8 +56,9 @@ class GroupManager:
             return
         try:
             data = json.loads(self._config_path.read_text())
-            self._my_group = data.get("my_group")
-            for name in data.get("groups", []):
+            self._my_group = data.get("my_group") or data.get("active")
+            for item in data.get("groups", []):
+                name = item["name"] if isinstance(item, dict) else item
                 self._groups[name] = Group(name=name)
             if self._my_group is not None and self._my_group not in self._groups:
                 self._my_group = None
