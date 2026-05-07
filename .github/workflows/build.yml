@@ -3,7 +3,12 @@ name: Build
 on:
   push:
     branches: [main]
+    tags: ['v*']
   workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Release-Tag für Asset-Upload (z.B. v0.9.0) — leer lassen für normalen CI-Build'
+        required: false
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -30,6 +35,13 @@ jobs:
           name: FileSyncro-Windows
           path: dist/FileSyncro.exe
 
+      - name: Upload to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/') || github.event.inputs.release_tag != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ github.event.inputs.release_tag || github.ref_name }}
+        run: gh release upload $env:RELEASE_TAG "dist/FileSyncro.exe#FileSyncro-Windows.exe" --clobber
+
   build-macos:
     runs-on: macos-latest
     steps:
@@ -51,3 +63,19 @@ jobs:
           name: FileSyncro-macOS
           path: dist/FileSyncro.app
           if-no-files-found: error
+
+      - name: Package for release
+        if: startsWith(github.ref, 'refs/tags/') || github.event.inputs.release_tag != ''
+        run: |
+          cd dist
+          zip -r FileSyncro-macOS.zip FileSyncro.app
+          hdiutil create -volname "FileSyncro" -srcfolder FileSyncro.app -ov -format UDZO FileSyncro-macOS.dmg
+
+      - name: Upload to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/') || github.event.inputs.release_tag != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ github.event.inputs.release_tag || github.ref_name }}
+        run: |
+          gh release upload $RELEASE_TAG "dist/FileSyncro-macOS.zip" --clobber
+          gh release upload $RELEASE_TAG "dist/FileSyncro-macOS.dmg" --clobber
